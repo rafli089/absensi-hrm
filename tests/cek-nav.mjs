@@ -9,7 +9,7 @@ const login = await fetch(`${BASE}/api/auth/login`, {
 const cookie = login.headers.getSetCookie()?.[0]?.split(";")[0] ?? "";
 console.log("login:", login.status, cookie ? "OK" : "NO COOKIE");
 
-for (const path of ["/dashboard", "/absensi/hari-ini", "/absensi/riwayat", "/pengaturan/kantor"]) {
+for (const path of ["/dashboard", "/absensi/hari-ini", "/absensi/riwayat", "/karyawan", "/shift", "/penggajian", "/keamanan", "/pengaturan/kantor"]) {
   const res = await fetch(`${BASE}${path}`, { headers: { Cookie: cookie }, redirect: "manual" });
   const html = await res.text();
   const aside = /<aside[^>]*w-60/.test(html);

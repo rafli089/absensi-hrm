@@ -2,30 +2,36 @@
 
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { LayoutDashboard, Clock3, History, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, Clock3, History, Users, Calendar, Wallet, ShieldAlert, Settings, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { type SessionUser } from "@/lib/auth/session";
-import { ROLE_LABEL, STAFF_ROLES } from "@/lib/auth/permissions";
+import { ROLE_LABEL, can, PERMISSIONS, type Permission } from "@/lib/auth/permissions";
+
+type Item = { label: string; href: string; Icon: typeof LayoutDashboard; need?: Permission };
 
 /** Hanya halaman yang benar-benar ada. Tambah link saat halamannya dibuat. */
-const ITEMS = [
+const ITEMS: Item[] = [
   { label: "Dashboard", href: "/dashboard", Icon: LayoutDashboard },
   { label: "Absensi", href: "/absensi/hari-ini", Icon: Clock3 },
-  { label: "Riwayat", href: "/absensi/riwayat", Icon: History },
+  { label: "Riwayat", href: "/absensi/riwayat", Icon: History, need: PERMISSIONS.ATTENDANCE_HISTORY_SELF },
+  { label: "Karyawan", href: "/karyawan", Icon: Users, need: PERMISSIONS.EMPLOYEE_MANAGE },
+  { label: "Shift", href: "/shift", Icon: Calendar, need: PERMISSIONS.SHIFT_MANAGE },
+  { label: "Penggajian", href: "/penggajian", Icon: Wallet, need: PERMISSIONS.PAYSLIP_VIEW_SELF },
+  { label: "Keamanan", href: "/keamanan", Icon: ShieldAlert, need: PERMISSIONS.SECURITY_VIEW },
+  { label: "Pengaturan", href: "/pengaturan/kantor", Icon: Settings, need: PERMISSIONS.SETTINGS_MANAGE },
 ];
 
 function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-function menuFor(staff: boolean) {
-  return staff ? [...ITEMS, { label: "Pengaturan", href: "/pengaturan/kantor", Icon: Settings }] : ITEMS;
+function menuFor(role: SessionUser["role"]) {
+  return ITEMS.filter((i) => !i.need || can(role, i.need));
 }
 
 export function Sidebar({ user }: { user: SessionUser }) {
   const pathname = usePathname() ?? "";
-  const staff = STAFF_ROLES.includes(user.role);
-  const items = menuFor(staff);
+  const items = menuFor(user.role);
 
   return (
     <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col gap-4 overflow-y-auto border-r border-[var(--border)] bg-[var(--surface)] p-4 lg:flex">
@@ -64,8 +70,7 @@ export function Sidebar({ user }: { user: SessionUser }) {
 export function MobileHeader({ user }: { user: SessionUser }) {
   const pathname = usePathname() ?? "";
   const keluar = useKeluar();
-  const staff = STAFF_ROLES.includes(user.role);
-  const items = menuFor(staff);
+  const items = menuFor(user.role);
 
   return (
     <header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 lg:hidden">
@@ -73,7 +78,8 @@ export function MobileHeader({ user }: { user: SessionUser }) {
         <p className="truncate text-[13px] font-medium text-[var(--ink)]">{user.fullName}</p>
         <p className="text-[11px] text-[var(--ink-2)]">{ROLE_LABEL[user.role]}</p>
       </div>
-      <nav className="flex shrink-0 items-center gap-1">
+      <nav className="flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto">
+        <div className="flex shrink-0 items-center gap-1">
         {items.map(({ label, href, Icon }) => (
           <Link
             key={href}
@@ -91,6 +97,7 @@ export function MobileHeader({ user }: { user: SessionUser }) {
         <button type="button" onClick={keluar} aria-label="Keluar" className="rounded-[10px] p-2 text-[var(--ink-2)] hover:bg-[var(--bg)]">
           <LogOut className="size-5" aria-hidden />
         </button>
+        </div>
       </nav>
     </header>
   );
