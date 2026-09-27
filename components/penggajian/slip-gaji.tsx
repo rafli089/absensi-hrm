@@ -20,6 +20,8 @@ export type SlipData = {
   lateMinutes: number;
   absentDays: number;
   status: string;
+  approvedByName: string | null;
+  approvedAt: string | null;
   employee: {
     id: string;
     employeeCode: string;
@@ -157,7 +159,16 @@ export function SlipGaji({
             )}
             <div className="text-center">
               <p className="text-[var(--ink-2)]">{kantor?.name ?? "Perusahaan"}, {tanggalPanjang(new Date().toISOString())}</p>
-              <p className="mt-10 font-medium">HRD / Manager</p>
+              {payroll.approvedByName ? (
+                <>
+                  <p className="mt-10 font-medium">{payroll.approvedByName}</p>
+                  <p className="text-[11px] text-[var(--ink-2)]">
+                    Disetujui {tanggalPanjang(payroll.approvedAt ?? new Date().toISOString())}
+                  </p>
+                </>
+              ) : (
+                <p className="mt-10 font-medium">HRD / Manager</p>
+              )}
             </div>
           </footer>
         </article>

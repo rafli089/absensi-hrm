@@ -32,6 +32,9 @@ export default async function SlipGajiPage({ params }: { params: Promise<{ id: s
         },
       },
       items: { orderBy: { name: "asc" } },
+      // Nama orang ada di Employee, tidak di User — jadi lewat relasi.
+      // Slip memuat nomor rekening, jadi cukup nama; tidak perlu username/email.
+      approvedBy: { select: { employee: { select: { fullName: true } } } },
     },
   });
 
@@ -63,6 +66,9 @@ export default async function SlipGajiPage({ params }: { params: Promise<{ id: s
         lateMinutes: payroll.lateMinutes,
         absentDays: payroll.absentDays,
         status: payroll.status,
+        // User tanpa employee (akun admin murni) tidak punya nama untuk dicetak.
+        approvedByName: payroll.approvedBy?.employee?.fullName ?? null,
+        approvedAt: payroll.approvedAt?.toISOString() ?? null,
         employee: payroll.employee,
         items: payroll.items.map((i) => ({ id: i.id, name: i.name, amount: i.amount.toString(), note: i.note })),
       }}

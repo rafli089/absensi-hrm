@@ -159,6 +159,7 @@ model User {
   sessions      Session[]
   auditLogs     AuditLog[]
   securityEvents SecurityEvent[]
+  approvedPayrolls Payroll[] @relation("PayrollApprover")
 
   @@index([role])
   @@map("users")
@@ -451,6 +452,7 @@ model Payroll {
   absentDays     Int           @default(0)
   status         PayrollStatus @default(DRAFT)
   approvedById   String?
+  approvedBy     User? @relation("PayrollApprover", fields: [approvedById], references: [id], onDelete: SetNull)
   approvedAt     DateTime?
   notes          String?
   createdAt      DateTime      @default(now())
