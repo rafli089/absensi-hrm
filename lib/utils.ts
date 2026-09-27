@@ -40,16 +40,26 @@ export const inisial = (nama: string) =>
 /** "09:00" -> "09.00" */
 export const jamSingkat = (t: string) => t.replace(":", ".");
 
-/** Ambil tanggal hari ini sebagai midnight UTC-lokal, untuk kolom @db.Date. */
 /**
- * Tanggal hari ini pada waktu lokal server, dinormalkan ke 00:00.
+ * Ambil tanggal hari ini (kalender kantor, WIB) sebagai UTC-midnight,
+ * untuk kolom `@db.Date`.
  *
- * ponytail: satu timezone (lokal server = timezone kantor). Kalau server jalan
- * di UTC sementara kantor WIB, antara 00:00-07:00 WIB tanggal absensi akan
- * mundur sehari. Naikkan ke `SET timezone` per-kantor saat ada multi-region.
+ * `new Date(y,m,d,0,0,0)` memakai waktu lokal, tapi diwakili sebagai UTC
+ * — jadi di UTC+7 toISOString() mundur sehari, dan `@db.Date` menyimpan
+ * tanggal *sebelum*. Ini bug nyata antara 00:00–07:00 WIB: check-in jam
+ * 01 pagi tercatat sebagai hari sebelumnya.
+ *
+ * Perbaikan: ambil bagian *tanggal* lokal, lalu jadikan midnight UTC:
+ *   new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()))
+ * Ini menghasilkan 2026-09-27T00:00Z untuk 27 Sep WIB → disimpan 2026-09-27.
+ *
+ * ponytail: satu timezone (lokal server = timezone kantor). Kalau server
+ * jalan di UTC sementara kantor WIB, pendekatan di atas tetap benar
+ * karena ia tidak pernah memanggil setHours waktu-lokal.
+ * Multi-region sebenarnya membutuhkan `SET timezone` per-kantor atau
+ * menyimpan IANA timezone di Office dan mengonversi sebelum banding.
  */
 export function todayDate(): Date {
   const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d;
+  return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
 }

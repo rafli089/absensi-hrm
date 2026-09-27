@@ -199,8 +199,9 @@ async function RingkasanKaryawan({ user }: { user: Awaited<ReturnType<typeof req
 function mulaiMinggu(): Date {
   const d = new Date();
   d.setDate(d.getDate() - d.getDay());
-  d.setHours(0, 0, 0, 0);
-  return d;
+  // Kolom `attendance.date` adalah @db.Date → batas bawah harus UTC-midnight
+  // dari tanggal kalender lokal, bukan midnight waktu-lokal.
+  return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
 }
 
 export default async function DashboardPage() {

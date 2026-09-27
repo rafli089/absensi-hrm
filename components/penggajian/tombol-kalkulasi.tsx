@@ -9,11 +9,17 @@ import { Button } from "@/components/ui/button";
 /** Awal & akhir bulan berjalan, WIB. */
 function periodeBulanIni() {
   const now = new Date();
-  const awal = new Date(now.getFullYear(), now.getMonth(), 1);
-  // Hari terakhir bulan: new Date(y, m+1, 0) selalu hari terakhir bulan tersebut.
-  const akhir = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  // Periode disimpan di kolom @db.Date, jadi batasnya harus tanggal UTC.
+  // `new Date(y, m, 1)` memakai waktu lokal → di UTC+7 toISOString() mundur
+  // sehari, dan periode jadi 31 Agu–31 Agu, bukan 1–31 Sep.
+  const y = now.getUTCFullYear();
+  const m = now.getUTCMonth();
+  // Hari 0 bulan berikutnya = hari terakhir bulan ini.
   const iso = (d: Date) => d.toISOString().slice(0, 10);
-  return { periodStart: iso(awal), periodEnd: iso(akhir) };
+  return {
+    periodStart: iso(new Date(Date.UTC(y, m, 1))),
+    periodEnd: iso(new Date(Date.UTC(y, m + 1, 0))),
+  };
 }
 
 export function TombolKalkulasi() {

@@ -1,6 +1,7 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import { hitungAbsensi, toMinutes, atTime, validasiCheckOut } from "../lib/absensi/engine";
+import { todayDate } from "../lib/utils";
 
 /** Shift 09:00-18:00, break 12:00-13:00, grace 10 menit — persis contoh PRD §6.7. */
 const SHIFT = {
@@ -142,7 +143,7 @@ describe("edge case", () => {
     assert.equal(r.workMinutes, 360);
   });
 
-  test("shift malam: check-in 22:00, check-out 07:00次日 = 9 jam", () => {
+  test("shift malam: check-in 22:00, check-out 07:00 keesokan = 9 jam", () => {
     const malam = { startTime: "22:00", endTime: "07:00", breakStart: null, breakEnd: null, gracePeriod: 15, isOvernight: true };
     const inMalam = pada("22:00");
     const d = new Date();
@@ -179,5 +180,22 @@ describe("edge case", () => {
     const r = hitungAbsensi({ ...dasar, checkIn: null, presetStatus: "LEAVE" });
     assert.equal(r.status, "LEAVE");
     assert.equal(r.workMinutes, 0);
+  });
+});
+
+describe("todayDate(): kalender lokal, disimpan sebagai tanggal UTC", () => {
+  // `attendance.date` adalah `@db.Date`, jadi Prisma menyimpan bagian tanggal
+  // UTC. Kalau nilainya midnight waktu-lokal, di UTC+7 check-in pagi buta
+  // (00:00-07:00) tercatat sebagai HARI SEBELUMNYA. Bug nyata: karyawan yang
+  // absen jam 1 pagi tidak muncul di laporan hari itu.
+  test("tanggal UTC hasil todayDate() = tanggal kalender lokal", () => {
+    const d = todayDate();
+    const sekarang = new Date();
+    assert.equal(d.toISOString().slice(0, 10), `${sekarang.getFullYear()}-${String(sekarang.getMonth() + 1).padStart(2, "0")}-${String(sekarang.getDate()).padStart(2, "0")}`);
+  });
+
+  test("hasilnya tepat UTC midnight, supaya tidak ikut geser saat disimpan", () => {
+    const d = todayDate();
+    assert.equal(d.toISOString(), `${d.toISOString().slice(0, 10)}T00:00:00.000Z`);
   });
 });

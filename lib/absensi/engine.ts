@@ -74,6 +74,10 @@ export function hitungAbsensi(input: AbsensiInput): AbsensiResult {
     return { status: "REJECTED", lateMinutes: 0, earlyLeaveMinutes: 0, workMinutes: 0, overtimeMinutes: 0 };
   }
 
+  // Basis hari untuk batas shift. Sengaja waktu-lokal: `atTime` juga pakai
+  // `setHours` lokal, jadi keduanya konsisten dan menghasilkan hari kalender
+  // yang sama. Jangan diubah ke UTC — `todayDate()` yang perlu UTC, karena
+  // nilainya masuk ke kolom `@db.Date` yang dibandingkan per tanggal UTC.
   const today = new Date(checkIn);
   today.setHours(0, 0, 0, 0);
 
@@ -137,7 +141,8 @@ function hitungLembur(input: AbsensiInput): number {
   if (!overtimeStart) return 0;
   const end = overtimeEnd ?? checkOut;
   if (!end) return 0;
-  // Lembur hanya dihitung setelah shift berakhir.
+  // Lembur hanya dihitung setelah shift berakhir. Waktu-lokal, konsisten
+  // dengan `atTime` di atas.
   const today = new Date(input.checkIn ?? overtimeStart);
   today.setHours(0, 0, 0, 0);
   const shiftEnd = shift ? atTime(today, shift.endTime) : new Date(0);
