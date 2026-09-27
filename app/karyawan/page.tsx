@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { formatTanggal } from "@/lib/utils";
-import { Users, Search } from "lucide-react";
+import { Users, Search, UserPlus } from "lucide-react";
 
 export const metadata = { title: "Karyawan" };
 
@@ -66,6 +66,8 @@ export default async function KaryawanPage({
     return `/karyawan?${p.toString()}`;
   }
 
+  const bolehTambah = can(user.role, PERMISSIONS.EMPLOYEE_MANAGE);
+
   return (
     <AppShell user={user} maxWidth="max-w-[1100px]" className="space-y-6">
       <header className="flex items-center justify-between gap-4">
@@ -73,6 +75,15 @@ export default async function KaryawanPage({
           <h1 className="text-[28px] font-semibold tracking-[-0.02em] text-[var(--ink)]">Karyawan</h1>
           <p className="text-[15px] text-[var(--ink-2)]">{total} karyawan terdaftar</p>
         </div>
+        {bolehTambah && (
+          <Link
+            href="/karyawan/tambah"
+            className="inline-flex h-9 shrink-0 items-center gap-2 rounded-[10px] bg-[var(--brand)] px-4 text-sm font-medium text-white transition-colors hover:bg-[#0077ed]"
+          >
+            <UserPlus className="size-4" aria-hidden />
+            Tambah
+          </Link>
+        )}
       </header>
 
       <form method="GET" className="flex items-center gap-2">
