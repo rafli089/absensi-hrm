@@ -2,6 +2,7 @@ import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import { hitungAbsensi, toMinutes, atTime, validasiCheckOut } from "../lib/absensi/engine";
 import { todayDate } from "../lib/utils";
+import { tanggal, rentangTanggal } from "../lib/laporan/rekap";
 
 /** Shift 09:00-18:00, break 12:00-13:00, grace 10 menit — persis contoh PRD §6.7. */
 const SHIFT = {
@@ -197,5 +198,51 @@ describe("todayDate(): kalender lokal, disimpan sebagai tanggal UTC", () => {
   test("hasilnya tepat UTC midnight, supaya tidak ikut geser saat disimpan", () => {
     const d = todayDate();
     assert.equal(d.toISOString(), `${d.toISOString().slice(0, 10)}T00:00:00.000Z`);
+  });
+});
+
+describe("tanggal(): search param tidak boleh dipercaya", () => {
+  // `dari`/`sampai` datang dari URL. Tanpa validasi, `?dari=abc` jadi
+  // Invalid Date dan Prisma melempar 500, bukan 400.
+  test("menerima format YYYY-MM-DD yang sah, unchanged", () => {
+    assert.equal(tanggal("2026-09-27"), "2026-09-27");
+    assert.equal(tanggal("2026-01-01"), "2026-01-01");
+    assert.equal(tanggal("2026-12-31"), "2026-12-31");
+  });
+
+  test("menolak input kosong, bukan-string, dan format lain", () => {
+    assert.equal(tanggal(undefined), undefined);
+    assert.equal(tanggal(""), undefined);
+    assert.equal(tanggal("abc"), undefined);
+    assert.equal(tanggal("27-09-2026"), undefined);
+    assert.equal(tanggal("2026/09/27"), undefined);
+    assert.equal(tanggal("2026-09-27T00:00:00Z"), undefined); // tidak boleh ada jam
+  });
+
+  // `new Date("2026-02-31T00:00:00.000Z")` tidak error, dia geser ke 2 Maret.
+  // Kalau lolos, filter "sampai 28 Februari" diam-diam jadi lebih dari yang
+  // diminta — lebih buruk daripada ditolak.
+  test("menolak tanggal yang tidak ada di kalender (2026-02-31)", () => {
+    assert.equal(tanggal("2026-02-31"), undefined);
+    assert.equal(tanggal("2026-13-01"), undefined);
+    assert.equal(tanggal("2026-00-10"), undefined);
+    assert.equal(tanggal("2026-04-31"), undefined);
+  });
+
+  test("tahun kabisat: 2024-02-29 sah, 2026-02-29 tidak", () => {
+    assert.equal(tanggal("2024-02-29"), "2024-02-29");
+    assert.equal(tanggal("2026-02-29"), undefined);
+  });
+
+  test("tolak injeksi SQL — hanya digit dan tanda hubung yang lolos", () => {
+    assert.equal(tanggal("2026-09-27' OR '1'='1"), undefined);
+    assert.equal(tanggal("2026-09-27; DROP TABLE attendance"), undefined);
+    assert.equal(tanggal("'; DELETE FROM payrolls WHERE '1'='1"), undefined);
+  });
+
+  test("rentangTanggal() membungkus ke UTC midnight untuk kolom @db.Date", () => {
+    const r = rentangTanggal("2026-09-01", "2026-09-30");
+    assert.equal(r.gte.toISOString(), "2026-09-01T00:00:00.000Z");
+    assert.equal(r.lte.toISOString(), "2026-09-30T00:00:00.000Z");
   });
 });

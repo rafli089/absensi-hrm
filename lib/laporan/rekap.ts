@@ -29,6 +29,22 @@ export type FilterLaporan = {
 };
 
 /**
+ * Validasi tanggal dari search param.
+ *
+ * `dari`/`sampai` datang dari URL, jadi tidak boleh dipercaya: tanpa ini
+ * `?dari=abc` menjadi `new Date("abcT00:00:00.000Z")` → Invalid Date, dan
+ * Prisma melempar error 500 alih-alih memperlakukannya sebagai filter kosong.
+ * Dicek juga bulannya (2026-02-31) karena `Date` diam-diam menggeser ke Maret.
+ */
+export function tanggal(v: string | undefined): string | undefined {
+  if (!v) return undefined;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return undefined;
+  const d = new Date(v + "T00:00:00.000Z");
+  if (Number.isNaN(d.getTime())) return undefined;
+  return d.toISOString().slice(0, 10) === v ? v : undefined;
+}
+
+/**
  * Rentang inklusif. Kolom `attendance.date` adalah `@db.Date`, jadi batasnya
  * pukul 00:00 UTC — bukan `setHours` lokal yang di UTC+7 mundur sehari.
  */

@@ -2,7 +2,7 @@ import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth/session";
 import { can, PERMISSIONS } from "@/lib/auth/permissions";
 import { AppShell } from "@/components/app-shell";
-import { ambilLaporan, ringkas, STATUS_LABEL } from "@/lib/laporan/rekap";
+import { ambilLaporan, ringkas, STATUS_LABEL, tanggal } from "@/lib/laporan/rekap";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -49,8 +49,8 @@ export default async function LaporanPage({
   const awalBulan = new Date(Date.UTC(sekarang.getUTCFullYear(), sekarang.getUTCMonth(), 1)).toISOString().slice(0, 10);
 
   const f = {
-    dari: sp.dari || awalBulan,
-    sampai: sp.sampai || hariIni,
+    dari: tanggal(sp.dari) || awalBulan,
+    sampai: tanggal(sp.sampai) || hariIni,
     departemen: sp.departemen || undefined,
     employeeId: sp.employeeId || undefined,
     status: sp.status || undefined,
