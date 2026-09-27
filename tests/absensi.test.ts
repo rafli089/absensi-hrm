@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { hitungAbsensi, toMinutes, atTime, validasiCheckOut } from "../lib/absensi/engine";
 import { todayDate } from "../lib/utils";
 import { tanggal, rentangTanggal } from "../lib/laporan/rekap";
+import { izinkan, resetKunci } from "../lib/keamanan/rate-limit";
 
 /** Shift 09:00-18:00, break 12:00-13:00, grace 10 menit — persis contoh PRD §6.7. */
 const SHIFT = {
@@ -244,5 +245,63 @@ describe("tanggal(): search param tidak boleh dipercaya", () => {
     const r = rentangTanggal("2026-09-01", "2026-09-30");
     assert.equal(r.gte.toISOString(), "2026-09-01T00:00:00.000Z");
     assert.equal(r.lte.toISOString(), "2026-09-30T00:00:00.000Z");
+  });
+});
+
+describe("izinkan(): sliding window rate-limit login", () => {
+  // Rate-limit dipakai di POST /api/auth/login untuk blokir brute-force.
+  // Tanpa ini attacker bisa coba password tanpa batas — event
+  // REPEATED_ATTEMPTS cuma dicatat, tidak memblokir.
+  test("mengizinkan sampai batas, menolak selebihnya dalam window yang sama", () => {
+    const kunci = "test-login-" + Math.random();
+    for (let i = 0; i < 5; i++) {
+      const r = izinkan(kunci, 5, 600_000);
+      assert.equal(r.boleh, true, `percobaan ke-${i + 1} harus diizinkan`);
+      assert.equal(r.sisa, 5 - i - 1);
+    }
+    const ditolak = izinkan(kunci, 5, 600_000);
+    assert.equal(ditolak.boleh, false);
+    assert.equal(ditolak.sisa, 0);
+  });
+
+  test("window baru mengizinkan lagi setelah waktu habis", async () => {
+    const kunci = "test-reset-" + Math.random();
+    assert.equal(izinkan(kunci, 1, 20).boleh, true);
+    assert.equal(izinkan(kunci, 1, 20).boleh, false);
+    // Tunggu window 20ms lewat (buffer 30ms untuk CI lambat).
+    await new Promise((s) => setTimeout(s, 50));
+    const r = izinkan(kunci, 1, 20);
+    assert.equal(r.boleh, true);
+    assert.equal(r.sisa, 0);
+  });
+
+  test("kunci berbeda tidak saling mempengaruhi (per IP+email)", () => {
+    const a = "test-a-" + Math.random();
+    const b = "test-b-" + Math.random();
+    izinkan(a, 1, 600_000);
+    assert.equal(izinkan(a, 1, 600_000).boleh, false);
+    assert.equal(izinkan(b, 1, 600_000).boleh, true, "IP/email lain tidak ikut kena limit");
+  });
+
+  // Login memakai pola peek → catat kalau gagal → reset kalau berhasil.
+  // Kalau peek ikut menambah, satu login saja sudah memakan jatah, dan lima
+  // kali gagal lalu satu kali benar akan menyisakan strike untuk percobaan
+  // berikutnya di jendela yang sama.
+  test("catat:false hanya memeriksa, tidak menambah penghitung", () => {
+    const k = "test-peek-" + Math.random();
+    for (let i = 0; i < 10; i++) {
+      assert.equal(izinkan(k, 5, 600_000, false).boleh, true, `peek ke-${i + 1} tidak boleh salah`);
+    }
+    // 10 peek tidak pakai jatah, jadi masih boleh.
+    assert.equal(izinkan(k, 5, 600_000, false).boleh, true);
+  });
+
+  test("resetKunci() menghapus riwayat kegagalan setelah login berhasil", () => {
+    const k = "test-reset-kunci-" + Math.random();
+    izinkan(k, 2, 600_000); // gagal 1
+    izinkan(k, 2, 600_000); // gagal 2 → sudah penuh
+    assert.equal(izinkan(k, 2, 600_000, false).boleh, false, "harus terkunci sebelum reset");
+    resetKunci(k);
+    assert.equal(izinkan(k, 2, 600_000, false).boleh, true, "setelah login berhasil harus bisa lagi");
   });
 });

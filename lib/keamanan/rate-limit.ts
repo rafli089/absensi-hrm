@@ -11,12 +11,20 @@ const toko = new Map<string, Jendela>();
 
 export type HasilRate = { boleh: boolean; sisa: number; resetAt: number };
 
-/** Sliding window sederhana: izinkan `maks` permintaan per `jendelaMs`. */
-export function izinkan(kunci: string, maks: number, jendelaMs: number): HasilRate {
+/**
+ * Sliding window sederhana: izinkan `maks` permintaan per `jendelaMs`.
+ *
+ * `catat: false` hanya memeriksa tanpa menambah penghitung — dipakai login
+ * dengan pola "cek dulu, catat nanti kalau gagal". Tanpa itu, login yang
+ * berhasil ikut dihitung dan user yang logout-login 6 kali dalam 10 menit
+ * ikut terkunci.
+ */
+export function izinkan(kunci: string, maks: number, jendelaMs: number, catat = true): HasilRate {
   const sekarang = Date.now();
   const ada = toko.get(kunci);
 
   if (!ada || ada.resetAt <= sekarang) {
+    if (!catat) return { boleh: true, sisa: maks, resetAt: sekarang + jendelaMs };
     const baru: Jendela = { jumlah: 1, resetAt: sekarang + jendelaMs };
     toko.set(kunci, baru);
     return { boleh: true, sisa: maks - 1, resetAt: baru.resetAt };
@@ -26,8 +34,16 @@ export function izinkan(kunci: string, maks: number, jendelaMs: number): HasilRa
     return { boleh: false, sisa: 0, resetAt: ada.resetAt };
   }
 
+  if (!catat) return { boleh: true, sisa: maks - ada.jumlah, resetAt: ada.resetAt };
+
   ada.jumlah += 1;
   return { boleh: true, sisa: maks - ada.jumlah, resetAt: ada.resetAt };
+}
+
+/** Hapus penghitung — dipakai setelah login berhasil, supaya percobaan
+ *  selanjutnya tidak mewarisi riwayat kegagalan lama. */
+export function resetKunci(kunci: string): void {
+  toko.delete(kunci);
 }
 
 /** Pembersih berkala supaya Map tidak tumbuh tanpa batas di server yang hidup lama. */

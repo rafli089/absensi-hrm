@@ -10,7 +10,7 @@
     "db\\:seed": "tsx prisma/seed.ts",
     "db:seed": "tsx prisma/seed.ts",
     "test": "tsx --test tests/*.test.ts",
-    "test:e2e": "node tests/e2e-absen.mjs && node tests/e2e-karyawan.mjs && node tests/e2e-karyawan-update.mjs && node tests/e2e-shift.mjs && node tests/e2e-payroll.mjs && node tests/e2e-slip.mjs && node tests/e2e-laporan.mjs && node tests/e2e-riwayat.mjs"
+    "test:e2e": "node tests/e2e-absen.mjs && node tests/e2e-karyawan.mjs && node tests/e2e-karyawan-update.mjs && node tests/e2e-shift.mjs && node tests/e2e-payroll.mjs && node tests/e2e-slip.mjs && node tests/e2e-laporan.mjs && node tests/e2e-riwayat.mjs && node tests/e2e-auth-limit.mjs"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
