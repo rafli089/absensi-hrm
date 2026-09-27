@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Wallet } from "lucide-react";
+import Link from "next/link";
 import { TombolKalkulasi } from "@/components/penggajian/tombol-kalkulasi";
 
 export const metadata = { title: "Penggajian" };
@@ -75,6 +76,7 @@ export default async function PayrollPage() {
                   <TableHead>Netto</TableHead>
                   <TableHead>Hari</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Slip</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -97,6 +99,11 @@ export default async function PayrollPage() {
                       <Badge tone={p.status === "PAID" ? "success" : p.status === "APPROVED" ? "warning" : "neutral"}>
                         {LABEL_STATUS[p.status] ?? p.status}
                       </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Link href={`/penggajian/${p.id}/slip`} className="text-[13px] text-[var(--brand)] hover:underline">
+                        Lihat
+                      </Link>
                     </TableCell>
                   </TableRow>
                 ))}
