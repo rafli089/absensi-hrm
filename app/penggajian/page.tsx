@@ -8,21 +8,17 @@ import { Badge } from "@/components/ui/badge";
 import { Wallet } from "lucide-react";
 import Link from "next/link";
 import { TombolKalkulasi } from "@/components/penggajian/tombol-kalkulasi";
+import { transisiTersedia, LABEL_STATUS } from "@/lib/payroll/status";
+import { TombolStatus } from "@/components/penggajian/tombol-status";
 
 export const metadata = { title: "Penggajian" };
-
-const LABEL_STATUS: Record<string, string> = {
-  DRAFT: "Draft",
-  CALCULATED: "Dihitung",
-  REVIEWED: "Ditinjau",
-  APPROVED: "Disetujui",
-  PAID: "Dibayar",
-  LOCKED: "Dikunci",
-};
 
 export default async function PayrollPage() {
   const user = await requireUser();
   const lihatSemua = can(user.role, PERMISSIONS.PAYROLL_MANAGE);
+  // Tombol transisi hanya relevan untuk pengelola payroll. Karyawan yang
+  // cuma melihat slip-nya tidak punya izin apa pun untuk menaikkan status.
+  const bolehKelola = can(user.role, PERMISSIONS.PAYROLL_MANAGE) || can(user.role, PERMISSIONS.PAYROLL_APPROVE);
 
   if (!lihatSemua && !user.employeeId) {
     return (
@@ -77,6 +73,7 @@ export default async function PayrollPage() {
                   <TableHead>Hari</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Slip</TableHead>
+                  {bolehKelola && <TableHead className="text-right">Aksi</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -105,6 +102,19 @@ export default async function PayrollPage() {
                         Lihat
                       </Link>
                     </TableCell>
+                    {bolehKelola && (
+                      <TableCell>
+                        <TombolStatus
+                          payrollId={p.id}
+                          targets={transisiTersedia(p.status, (izin) => can(user.role, izin)).map((target) => ({
+                            target,
+                            // Label status itu kata benda, sedangkan di tombol
+                            // yang dibutuhkan aksi: "Ditinjau" bukan "Tandai ditinjau".
+                            label: target === "DRAFT" ? "Buka lagi" : `Tandai ${LABEL_STATUS[target].toLowerCase()}`,
+                          }))}
+                        />
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>

@@ -1,9 +1,9 @@
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { requireApiPermission, clientIp } from "@/lib/auth/session";
-import { PERMISSIONS } from "@/lib/auth/permissions";
 import { headers } from "next/headers";
 import { audit } from "@/lib/audit";
+import { izinUntuk, LANJUT } from "@/lib/payroll/status";
 
 /**
  * PATCH /api/payroll/[id]/status
@@ -13,29 +13,15 @@ import { audit } from "@/lib/audit";
  * kalkulasi menolak payroll REVIEWED ke atas, jadi tanpa endpoint ini tidak
  * ada jalan untuk mengunci periode dari aplikasi.
  *
- * Arah maju dibatasi urutan: DRAFT → CALCULATED → REVIEWED → APPROVED →
- * PAID → LOCKED. Keputusan tiap langkah berbeda izinnya:
- *   REVIEWED, DRAFT : PAYROLL_MANAGE (HR memeriksa, atau reset bila salah)
- *   APPROVED, PAID, LOCKED : PAYROLL_APPROVE
+ * Aturan transisi dan izin tinggal di `lib/payroll/status.ts` — dipakai
+ * bersama halaman /penggajian supaya tombol UI dan validasi server tidak
+ * bisa berbeda pendapat.
  *
  * Kembali ke DRAFT butuh `reason` — ini membuka kunci angka yang sudah
  * disetujui, jadi alasan wajib masuk audit log.
  */
 
 const TARGET = ["REVIEWED", "APPROVED", "PAID", "LOCKED", "DRAFT"] as const;
-
-/** Langkah berikutnya yang sah untuk tiap status sekarang. */
-const LANJUT: Record<string, readonly string[]> = {
-  DRAFT: ["REVIEWED"],
-  CALCULATED: ["REVIEWED"],
-  REVIEWED: ["APPROVED", "DRAFT"],
-  APPROVED: ["PAID", "DRAFT"],
-  PAID: ["LOCKED", "DRAFT"],
-  LOCKED: ["DRAFT"],
-};
-
-/** Transisi ini menyimpan uang negara — butuh PAYROLL_APPROVE. */
-const PERLU_APPROVE = new Set(["APPROVED", "PAID", "LOCKED"]);
 
 const body = z.object({ status: z.enum(TARGET), reason: z.string().trim().min(1).optional() });
 
@@ -50,10 +36,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     return Response.json({ error: pesan }, { status: 400 });
   }
 
-  const kebutuhan = PERLU_APPROVE.has(parsed.status)
-    ? PERMISSIONS.PAYROLL_APPROVE
-    : PERMISSIONS.PAYROLL_MANAGE;
-  const auth = await requireApiPermission(kebutuhan);
+  const auth = await requireApiPermission(izinUntuk(parsed.status));
   if (auth instanceof Response) return auth;
 
   if (parsed.status === "DRAFT" && !parsed.reason) {
