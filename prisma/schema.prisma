@@ -1,0 +1,546 @@
+// Skema Absensi & HR Management - PRD.md
+// Postgres 16 + Prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- ENUM ----------
+
+enum Role {
+  EMPLOYEE
+  SUPERVISOR
+  HR
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum EmploymentStatus {
+  PERMANENT
+  CONTRACT
+  INTERN
+  FREELANCE
+}
+
+enum ShiftType {
+  FIXED
+  ROTATING
+  FLEXIBLE
+  OVERNIGHT
+}
+
+enum ShiftStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum AttendanceType {
+  CHECK_IN
+  CHECK_OUT
+  BREAK_START
+  BREAK_END
+  OVERTIME_START
+  OVERTIME_END
+}
+
+enum AttendanceStatus {
+  PRESENT
+  LATE
+  EARLY_LEAVE
+  ABSENT
+  LEAVE
+  SICK
+  HOLIDAY
+  DAY_OFF
+  OVERTIME
+  INCOMPLETE
+  REJECTED
+}
+
+enum SecurityEventType {
+  GPS_OUTSIDE_OFFICE
+  UNUSUAL_LOGIN
+  MULTIPLE_DEVICE_LOGIN
+  SUSPICIOUS_ATTENDANCE
+  IP_CHANGE
+  IMPOSSIBLE_LOCATION
+  REPEATED_ATTEMPTS
+  RATE_LIMIT_EXCEEDED
+}
+
+enum Severity {
+  INFO
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum CorrectionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum PayrollStatus {
+  DRAFT
+  CALCULATED
+  REVIEWED
+  APPROVED
+  PAID
+  LOCKED
+}
+
+enum ComponentType {
+  ALLOWANCE
+  BONUS
+  DEDUCTION
+  TAX
+  BPJS
+}
+
+enum CalculationMethod {
+  FIXED
+  PERCENT_OF_BASIC
+  PER_HOUR
+  PER_DAY
+}
+
+enum AuditAction {
+  LOGIN
+  LOGOUT
+  FAILED_LOGIN
+  CREATE
+  UPDATE
+  DELETE
+  APPROVE
+  REJECT
+  PUBLISH
+  EXPORT
+  PERMISSION_CHANGE
+}
+
+enum SessionStatus {
+  ACTIVE
+  REVOKED
+}
+
+enum RecordStatus {
+  ACTIVE
+  INACTIVE
+}
+
+// ---------- INTI ----------
+
+model User {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  username     String     @unique
+  passwordHash String
+  role         Role       @default(EMPLOYEE)
+  status       UserStatus @default(ACTIVE)
+  lastLoginAt  DateTime?
+  employeeId   String?    @unique
+  employee     Employee?  @relation(fields: [employeeId], references: [id])
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  sessions      Session[]
+  auditLogs     AuditLog[]
+  securityEvents SecurityEvent[]
+
+  @@index([role])
+  @@map("users")
+}
+
+model Session {
+  id               String        @id @default(cuid())
+  sessionToken     String        @unique
+  userId           String
+  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status           SessionStatus @default(ACTIVE)
+  deviceId         String?
+  deviceLabel      String?
+  ipAddress        String?
+  userAgent        String?
+  lastActivityAt   DateTime      @default(now())
+  createdAt        DateTime      @default(now())
+  expiresAt        DateTime
+
+  @@index([userId, status])
+  @@map("sessions")
+}
+
+model Department {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  managerId   String?
+  manager     Employee? @relation("DepartmentManager", fields: [managerId], references: [id], onDelete: SetNull)
+  employees   Employee[] @relation("EmployeeDepartment")
+  positions   Position[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("departments")
+}
+
+model Position {
+  id           String   @id @default(cuid())
+  name         String
+  description  String?
+  departmentId String?
+  department   Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  employees    Employee[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([name, departmentId])
+  @@map("positions")
+}
+
+model Employee {
+  id               String           @id @default(cuid())
+  employeeCode     String           @unique
+  // FK ada di User.employeeId; sisi ini cuma back-relation.
+  user             User?
+  fullName         String
+  nik              String?          @unique
+  email            String?          @unique
+  phone            String?
+  gender           String?
+  birthDate        DateTime?
+  address          String?
+  departmentId     String?
+  department       Department?      @relation("EmployeeDepartment", fields: [departmentId], references: [id], onDelete: SetNull)
+  positionId       String?
+  position         Position?        @relation(fields: [positionId], references: [id], onDelete: SetNull)
+  employmentStatus EmploymentStatus @default(PERMANENT)
+  joinDate         DateTime
+  resignDate       DateTime?
+  photoUrl         String?
+  bankName         String?
+  bankAccount      String?
+  taxNumber        String?
+  isActive         Boolean          @default(true)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  managedDepartments Department[]     @relation("DepartmentManager")
+  attendance         Attendance[]
+  attendanceEvents   AttendanceEvent[]
+  employeeShifts     EmployeeShift[]
+  employeeLocations  EmployeeLocation[]
+  salaryStructures   SalaryStructure[]
+  payrolls           Payroll[]
+  securityEvents     SecurityEvent[]
+  approvedCorrections AttendanceCorrection[] @relation("CorrectionApprover")
+  requestedCorrections AttendanceCorrection[] @relation("CorrectionRequester")
+
+  @@index([departmentId])
+  @@index([employeeCode])
+  @@map("employees")
+}
+
+model Office {
+  id        String   @id @default(cuid())
+  name      String
+  address   String?
+  latitude  Float
+  longitude Float
+  radius    Float    @default(100) // meter
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  attendance Attendance[]
+
+  @@map("offices")
+}
+
+model EmployeeLocation {
+  id         String   @id @default(cuid())
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  latitude   Float
+  longitude  Float
+  accuracy   Float
+  capturedAt DateTime @default(now())
+
+  @@index([employeeId, capturedAt])
+  @@map("employee_locations")
+}
+
+model Shift {
+  id           String      @id @default(cuid())
+  name         String      @unique
+  type         ShiftType   @default(FIXED)
+  startTime    String // "09:00"
+  endTime      String // "18:00"
+  breakStart   String? // "12:00"
+  breakEnd     String? // "13:00"
+  gracePeriod  Int         @default(10) // menit
+  isOvernight  Boolean     @default(false)
+  status       ShiftStatus @default(ACTIVE)
+  description  String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  employeeShifts EmployeeShift[]
+  attendance     Attendance[]
+
+  @@map("shifts")
+}
+
+model EmployeeShift {
+  id         String   @id @default(cuid())
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  shiftId    String
+  shift      Shift    @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+  date       DateTime @db.Date
+  createdAt  DateTime @default(now())
+
+  @@unique([employeeId, date])
+  @@index([date])
+  @@map("employee_shifts")
+}
+
+model Attendance {
+  id                  String           @id @default(cuid())
+  employeeId          String
+  employee            Employee         @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  officeId            String?
+  office              Office?          @relation(fields: [officeId], references: [id], onDelete: SetNull)
+  shiftId             String?
+  shift               Shift?           @relation(fields: [shiftId], references: [id], onDelete: SetNull)
+  date                DateTime         @db.Date
+  checkIn             DateTime?
+  checkOut            DateTime?
+  breakStart          DateTime?
+  breakEnd            DateTime?
+  overtimeStart       DateTime?
+  overtimeEnd         DateTime?
+  latitude            Float?
+  longitude           Float?
+  accuracy            Float?
+  distanceFromOffice  Float? // meter
+  ipAddress           String?
+  deviceId            String?
+  photo               String? // dataURL base64 foto check-in/out (tanpa face-api)
+  status              AttendanceStatus @default(PRESENT)
+  lateMinutes         Int              @default(0)
+  earlyLeaveMinutes   Int              @default(0)
+  workMinutes         Int              @default(0)
+  overtimeMinutes     Int              @default(0)
+  rejectionReason     String?
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+
+  events        AttendanceEvent[]
+  corrections   AttendanceCorrection[]
+
+  @@unique([employeeId, date])
+  @@index([date, status])
+  @@index([checkIn])
+  @@map("attendance")
+}
+
+model AttendanceEvent {
+  id           String         @id @default(cuid())
+  attendanceId String?
+  attendance   Attendance?    @relation(fields: [attendanceId], references: [id], onDelete: Cascade)
+  employeeId   String
+  employee     Employee       @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  eventType    AttendanceType
+  timestamp    DateTime       @default(now())
+  latitude     Float?
+  longitude    Float?
+  accuracy     Float?
+  deviceId     String?
+  ipAddress    String?
+  photo        String? // dataURL base64 foto pada kejadian ini
+  metadata     Json?
+
+  @@index([employeeId, timestamp])
+  @@map("attendance_events")
+}
+
+model AttendanceCorrection {
+  id            String           @id @default(cuid())
+  attendanceId  String
+  attendance    Attendance       @relation(fields: [attendanceId], references: [id], onDelete: Cascade)
+  requestedById String
+  requestedBy   Employee         @relation("CorrectionRequester", fields: [requestedById], references: [id], onDelete: Cascade)
+  approvedById  String?
+  approvedBy    Employee?        @relation("CorrectionApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+  field         String
+  oldValue      String?
+  newValue      String
+  reason        String
+  status        CorrectionStatus @default(PENDING)
+  decidedAt     DateTime?
+  decisionNote  String?
+  createdAt     DateTime         @default(now())
+
+  @@index([status])
+  @@map("attendance_corrections")
+}
+
+// ---------- GAJI & PAYROLL ----------
+
+model SalaryStructure {
+  id           String    @id @default(cuid())
+  employeeId   String
+  employee     Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  basicSalary  Decimal   @db.Decimal(15, 2)
+  effectiveFrom DateTime @db.Date
+  effectiveTo  DateTime? @db.Date
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([employeeId])
+  @@map("salary_structures")
+}
+
+model SalaryComponent {
+  id                 String            @id @default(cuid())
+  name               String
+  type               ComponentType
+  calculationMethod  CalculationMethod @default(FIXED)
+  amount             Decimal           @db.Decimal(15, 2)
+  percentValue       Decimal?          @db.Decimal(7, 2)
+  isTaxable          Boolean           @default(false)
+  isDeduction        Boolean
+  status             RecordStatus  @default(ACTIVE)
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  payrollItems PayrollItem[]
+
+  @@map("salary_components")
+}
+
+model Payroll {
+  id             String        @id @default(cuid())
+  employeeId     String
+  employee       Employee      @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  periodStart    DateTime      @db.Date
+  periodEnd      DateTime      @db.Date
+  paymentDate    DateTime?     @db.Date
+  basicSalary    Decimal       @db.Decimal(15, 2)
+  totalAllowance Decimal       @default(0) @db.Decimal(15, 2)
+  totalOvertime  Decimal       @default(0) @db.Decimal(15, 2)
+  totalBonus     Decimal       @default(0) @db.Decimal(15, 2)
+  totalDeduction Decimal       @default(0) @db.Decimal(15, 2)
+  tax            Decimal       @default(0) @db.Decimal(15, 2)
+  netSalary      Decimal       @db.Decimal(15, 2)
+  workDays       Int           @default(0)
+  lateMinutes    Int           @default(0)
+  absentDays     Int           @default(0)
+  status         PayrollStatus @default(DRAFT)
+  approvedById   String?
+  approvedAt     DateTime?
+  notes          String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  items    PayrollItem[]
+  payslips Payslip[]
+
+  @@unique([employeeId, periodStart, periodEnd])
+  @@index([status])
+  @@map("payrolls")
+}
+
+model PayrollItem {
+  id          String          @id @default(cuid())
+  payrollId   String
+  payroll     Payroll         @relation(fields: [payrollId], references: [id], onDelete: Cascade)
+  componentId String?
+  component   SalaryComponent? @relation(fields: [componentId], references: [id], onDelete: SetNull)
+  name        String
+  amount      Decimal         @db.Decimal(15, 2)
+  note        String?
+
+  @@map("payroll_items")
+}
+
+model Payslip {
+  id          String    @id @default(cuid())
+  payrollId   String
+  payroll     Payroll   @relation(fields: [payrollId], references: [id], onDelete: Cascade)
+  employeeId  String
+  fileUrl     String? // MVP: null, slip dicetak dari server (PRD §6.16)
+  generatedAt DateTime  @default(now())
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@unique([payrollId])
+  @@map("payslips")
+}
+
+// ---------- KEAMANAN ----------
+
+model SecurityEvent {
+  id          String            @id @default(cuid())
+  employeeId  String?
+  employee    Employee?         @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+  userId      String?
+  user        User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
+  eventType   SecurityEventType
+  severity    Severity          @default(INFO)
+  ipAddress   String?
+  deviceId    String?
+  latitude    Float?
+  longitude   Float?
+  description String
+  metadata    Json?
+  resolvedAt  DateTime?
+  resolvedBy  String?
+  createdAt   DateTime          @default(now())
+
+  @@index([severity, createdAt])
+  @@index([eventType])
+  @@map("security_events")
+}
+
+model AuditLog {
+  id         String      @id @default(cuid())
+  userId     String?
+  user       User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action     AuditAction
+  entityType String
+  entityId   String
+  oldValue   Json?
+  newValue   Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime    @default(now())
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// ---------- PENGATURAN ----------
+
+model AppSetting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+  updatedBy String?
+
+  @@map("app_settings")
+}
