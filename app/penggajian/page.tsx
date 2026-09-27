@@ -6,8 +6,18 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Wallet } from "lucide-react";
+import { TombolKalkulasi } from "@/components/penggajian/tombol-kalkulasi";
 
 export const metadata = { title: "Penggajian" };
+
+const LABEL_STATUS: Record<string, string> = {
+  DRAFT: "Draft",
+  CALCULATED: "Dihitung",
+  REVIEWED: "Ditinjau",
+  APPROVED: "Disetujui",
+  PAID: "Dibayar",
+  LOCKED: "Dikunci",
+};
 
 export default async function PayrollPage() {
   const user = await requireUser();
@@ -34,11 +44,14 @@ export default async function PayrollPage() {
 
   return (
     <AppShell user={user} maxWidth="max-w-[1100px]" className="space-y-6">
-      <header>
-        <h1 className="text-[28px] font-semibold tracking-[-0.02em] text-[var(--ink)]">Penggajian</h1>
-        <p className="text-[15px] text-[var(--ink-2)]">
-          {lihatSemua ? `${payrolls.length} payroll terbaru` : "Payroll Anda"}
-        </p>
+      <header className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-[28px] font-semibold tracking-[-0.02em] text-[var(--ink)]">Penggajian</h1>
+          <p className="text-[15px] text-[var(--ink-2)]">
+            {lihatSemua ? `${payrolls.length} payroll terbaru` : "Payroll Anda"}
+          </p>
+        </div>
+        {lihatSemua && <TombolKalkulasi />}
       </header>
 
       <Card>
@@ -47,7 +60,9 @@ export default async function PayrollPage() {
             <div className="flex flex-col items-center gap-2 py-8 text-center">
               <Wallet className="size-10 text-[var(--ink-2)]/40" aria-hidden />
               <p className="text-[13px] text-[var(--ink-2)]">
-                {lihatSemua ? "Belum ada data payroll." : "Payroll tersedia setelah HR membuat dan menyetujui data gaji Anda."}
+                {lihatSemua
+                  ? "Belum ada data payroll. Gunakan tombol kalkulasi untuk menghitung periode berjalan."
+                  : "Payroll tersedia setelah HR menghitung dan menyetujui data gaji Anda."}
               </p>
             </div>
           ) : (
@@ -80,7 +95,7 @@ export default async function PayrollPage() {
                     <TableCell className="font-mono">{p.workDays}</TableCell>
                     <TableCell>
                       <Badge tone={p.status === "PAID" ? "success" : p.status === "APPROVED" ? "warning" : "neutral"}>
-                        {p.status === "PAID" ? "Dibayar" : p.status === "APPROVED" ? "Disetujui" : p.status === "DRAFT" ? "Draft" : p.status}
+                        {LABEL_STATUS[p.status] ?? p.status}
                       </Badge>
                     </TableCell>
                   </TableRow>
