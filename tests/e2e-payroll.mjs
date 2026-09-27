@@ -46,7 +46,7 @@ r = await calc(admin, { periodStart, periodEnd });
 const data = await r.json();
 cek("200 OK", r.status === 200, JSON.stringify(data).slice(0, 200));
 cek("ada karyawan diproses", data.diproses > 0, "diproses=" + data.diproses);
-cek("semua punya netSalary > 0", data.hasil.every((h) => h.netSalary > 0), JSON.stringify(data.hasil?.slice(0,2)));
+cek("semua punya netSalary > 0", data.hasil.every((h) => h.netSalary > 0), JSON.stringify(data.hasil?.slice(0, 2)));
 cek("status CALCULATED", data.hasil.every((h) => h.status === "CALCULATED"));
 
 // Cek row tersimpan + items
@@ -70,6 +70,41 @@ r = await calc(admin, { periodStart, periodEnd });
 const data2 = await r.json();
 const payrolls2 = await p.payroll.findMany({ where: { periodStart: new Date(periodStart + "T00:00:00.000Z") } });
 cek("tidak duplikat saat re-run", payrolls2.length === payrolls.length, `${payrolls.length} -> ${payrolls2.length}`);
+
+// Lock guard (PRD §6.14): payroll yang sudah disetujui/dibayar tidak boleh
+// dihitung ulang. Respons tetap 200 dengan `gagal` per karyawan supaya sisa
+// batch tetap jalan.
+console.log("\n-- lock guard --");
+const target = payrolls[0];
+const kunci = async (status, harusDitolak) => {
+  await p.payroll.update({ where: { id: target.id }, data: { status } });
+  const sebelum = await p.payroll.findUnique({ where: { id: target.id } });
+  const rr = await calc(admin, { periodStart, periodEnd, employeeIds: [target.employeeId] });
+  const dd = await rr.json();
+  const sesudah = await p.payroll.findUnique({ where: { id: target.id } });
+  cek(
+    `${status} ${harusDitolak ? "tidak ditimpa" : "boleh dihitung ulang"}`,
+    harusDitolak
+      ? sesudah.status === status && String(sesudah.netSalary) === String(sebelum.netSalary)
+      : sesudah.status === "CALCULATED",
+    `status=${sesudah.status} gagal=${dd.gagal}`,
+  );
+  if (harusDitolak) {
+    cek(`${status}: alasan menyebut status`, dd.error?.[0]?.reason?.includes(status) === true, JSON.stringify(dd.error));
+  }
+};
+await kunci("REVIEWED", true);
+await kunci("APPROVED", true);
+await kunci("PAID", true);
+await kunci("LOCKED", true);
+await kunci("DRAFT", false);
+await kunci("CALCULATED", false);
+
+// Satu karyawan terkunci tidak boleh menghentikan sisa batch
+await p.payroll.update({ where: { id: target.id }, data: { status: "APPROVED" } });
+r = await calc(admin, { periodStart, periodEnd });
+const batch = await r.json();
+cek("batch campur: sebagian gagal, sebagian diproses", batch.diproses > 0 && batch.gagal > 0, `diproses=${batch.diproses} gagal=${batch.gagal}`);
 
 // Bersihkan
 await p.payroll.deleteMany({ where: { periodStart: new Date(periodStart + "T00:00:00.000Z") } });

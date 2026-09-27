@@ -27,9 +27,8 @@ import {
  *    - Upsert Payroll + PayrollItem
  * 3. Return summary
  *
- * ponytail: belum handle lock period (PRD §6.14). Kalau payroll sudah
- * CALCULATED/APPROVED/PAID, endpoint ini akan overwrite. Tambahkan
- * guard status bila perlu.
+ * Guard lock: payroll yang sudah REVIEWED/APPROVED/PAID/LOCKED tidak bisa di-
+ * overwrite. Hanya DRAFT dan CALCULATED yang boleh dihitung ulang.
  */
 
 const bodyCalc = z.object({
@@ -148,39 +147,37 @@ export async function POST(req: Request) {
       dailyRate: daily,
     });
 
-    // Upsert payroll
-    const payroll = await prisma.payroll.upsert({
+    // Guard lock: payroll yang sudah REVIEWED/APPROVED/PAID/LOCKED tidak
+    // boleh dihitung ulang — nilai historis yang sudah diverifikasi orang
+    // harus tetap.
+    const payrollLama = await prisma.payroll.findUnique({
       where: { employeeId_periodStart_periodEnd: { employeeId: k.id, periodStart, periodEnd } },
-      update: {
-        basicSalary: hasil.basicSalary,
-        totalAllowance: hasil.totalAllowance,
-        totalOvertime: hasil.totalOvertime,
-        totalBonus: hasil.totalBonus,
-        totalDeduction: hasil.totalDeduction,
-        tax: hasil.tax,
-        netSalary: hasil.netSalary,
-        workDays: summary.workDays,
-        lateMinutes: summary.lateMinutes,
-        absentDays: summary.absentDays,
-        status: "CALCULATED",
-      },
-      create: {
-        employeeId: k.id,
-        periodStart,
-        periodEnd,
-        basicSalary: hasil.basicSalary,
-        totalAllowance: hasil.totalAllowance,
-        totalOvertime: hasil.totalOvertime,
-        totalBonus: hasil.totalBonus,
-        totalDeduction: hasil.totalDeduction,
-        tax: hasil.tax,
-        netSalary: hasil.netSalary,
-        workDays: summary.workDays,
-        lateMinutes: summary.lateMinutes,
-        absentDays: summary.absentDays,
-        status: "CALCULATED",
-      },
+      select: { id: true, status: true },
     });
+
+    if (payrollLama && !["DRAFT", "CALCULATED"].includes(payrollLama.status)) {
+      errors.push({ employeeCode: k.employeeCode, reason: `Payroll sudah berstatus ${payrollLama.status} — tidak bisa dihitung ulang.` });
+      continue;
+    }
+
+    const payrollBaru = {
+      basicSalary: hasil.basicSalary,
+      totalAllowance: hasil.totalAllowance,
+      totalOvertime: hasil.totalOvertime,
+      totalBonus: hasil.totalBonus,
+      totalDeduction: hasil.totalDeduction,
+      tax: hasil.tax,
+      netSalary: hasil.netSalary,
+      workDays: summary.workDays,
+      lateMinutes: summary.lateMinutes,
+      absentDays: summary.absentDays,
+      status: "CALCULATED" as const,
+    };
+
+    // Upsert payroll
+    const payroll = payrollLama
+      ? await prisma.payroll.update({ where: { id: payrollLama.id }, data: payrollBaru })
+      : await prisma.payroll.create({ data: { employeeId: k.id, periodStart, periodEnd, ...payrollBaru } });
 
     // Payroll items
     await prisma.payrollItem.deleteMany({ where: { payrollId: payroll.id } });
