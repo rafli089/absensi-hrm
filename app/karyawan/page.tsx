@@ -128,6 +128,7 @@ export default async function KaryawanPage({
                   <TableHead>Status</TableHead>
                   <TableHead>Akun</TableHead>
                   <TableHead>Masuk</TableHead>
+                  {bolehTambah && <TableHead>Aksi</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -159,6 +160,13 @@ export default async function KaryawanPage({
                     <TableCell className="whitespace-nowrap text-[var(--ink-2)]">
                       {formatTanggal(e.joinDate)}
                     </TableCell>
+                    {bolehTambah && (
+                      <TableCell>
+                        <Link href={`/karyawan/${e.id}/edit`} className="text-[13px] text-[var(--brand)] hover:underline">
+                          Edit
+                        </Link>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>

@@ -33,6 +33,7 @@ const valid = {
   fullName: "Uji Coba " + stamp,
   email: "uji" + stamp + "@kantor.id",
   joinDate: "2026-01-15",
+  employmentStatus: "PERMANENT",
 };
 
 console.log("\n-- karyawan biasa tidak boleh membuat --");
@@ -57,6 +58,12 @@ cek("departemen asing ditolak", r.status === 400);
 
 r = await post(admin, { ...valid, joinDate: "bukan-tanggal" });
 cek("tanggal rusak ditolak", r.status === 400);
+
+r = await post(admin, { ...valid, employmentStatus: undefined });
+cek("employmentStatus kosong ditolak", r.status === 400, "status=" + r.status);
+
+r = await post(admin, { ...valid, employmentEndDate: "2025-01-01" });
+cek("berhenti sebelum masuk ditolak", r.status === 400, "status=" + r.status);
 
 console.log("\n-- buat --");
 r = await post(admin, valid);
