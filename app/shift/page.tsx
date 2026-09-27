@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "lucide-react";
+import { AssignShift } from "@/components/shift/assign-shift";
 
 export const metadata = { title: "Shift" };
 
@@ -19,10 +20,17 @@ export default async function ShiftPage() {
     );
   }
 
-  const shifts = await prisma.shift.findMany({
-    orderBy: { name: "asc" },
-    include: { _count: { select: { employeeShifts: true } } },
-  });
+  const [shifts, employees] = await Promise.all([
+    prisma.shift.findMany({
+      orderBy: { name: "asc" },
+      include: { _count: { select: { employeeShifts: true } } },
+    }),
+    prisma.employee.findMany({
+      where: { isActive: true },
+      orderBy: { fullName: "asc" },
+      select: { id: true, employeeCode: true, fullName: true },
+    }),
+  ]);
 
   return (
     <AppShell user={user} maxWidth="max-w-[1100px]" className="space-y-6">
@@ -30,6 +38,12 @@ export default async function ShiftPage() {
         <h1 className="text-[28px] font-semibold tracking-[-0.02em] text-[var(--ink)]">Shift</h1>
         <p className="text-[15px] text-[var(--ink-2)]">{shifts.length} shift terdaftar</p>
       </header>
+
+      <AssignShift
+        shifts={shifts.map((s) => ({ id: s.id, name: s.name, startTime: s.startTime, endTime: s.endTime }))}
+        employees={employees}
+        tanggalAwal={new Date().toISOString().slice(0, 10)}
+      />
 
       <Card>
         <CardContent className="pt-5">
