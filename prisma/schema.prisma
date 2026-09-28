@@ -141,6 +141,20 @@ enum RecordStatus {
   INACTIVE
 }
 
+enum LeaveType {
+  ANNUAL     // cuti tahunan
+  SICK       // cuti sakit
+  PERSONAL   // cuti pribadi
+  UNPAID     // cuti tanpa gaji
+}
+
+enum LeaveStatus {
+  PENDING    // menunggu approval supervisor
+  APPROVED   // disetujui
+  REJECTED   // ditolak
+  CANCELLED  // dibatalkan
+}
+
 // ---------- INTI ----------
 
 model User {
@@ -248,6 +262,8 @@ model Employee {
   securityEvents     SecurityEvent[]
   approvedCorrections AttendanceCorrection[] @relation("CorrectionApprover")
   requestedCorrections AttendanceCorrection[] @relation("CorrectionRequester")
+  leaveRequests        LeaveRequest[]       @relation("LeaveRequester")
+  approvedLeaves       LeaveRequest[]       @relation("LeaveApprover")
 
   @@index([departmentId])
   @@index([employeeCode])
@@ -397,6 +413,39 @@ model AttendanceCorrection {
 
   @@index([status])
   @@map("attendance_corrections")
+}
+
+/**
+ * Pengajuan cuti (PRD §6.12).
+ *
+ * Satu baris = satu hari cuti. Cuti annual dihitung dari-many-records,
+ * bukan satu baris dengan rentang tanggal — jadi kuota per tahun bisa
+ * dijumlahkan langsung dan bentrok tanggal ditangani di DB lewat
+ * `@@unique([employeeId, date])`.
+ *
+ * ponytail: belum ada `deletedAt`. Batal = status CANCELLED supaya
+ * riwayat tetap bisa diaudit. Tambah soft-delete kalau GDPR/retensi
+ * jadi kebutuhan nyata.
+ */
+model LeaveRequest {
+  id           String      @id @default(cuid())
+  employeeId   String
+  employee     Employee    @relation("LeaveRequester", fields: [employeeId], references: [id], onDelete: Cascade)
+  type         LeaveType
+  date         DateTime    @db.Date
+  reason       String
+  status       LeaveStatus @default(PENDING)
+  approvedById String?
+  approvedBy   Employee?   @relation("LeaveApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+  decidedAt    DateTime?
+  decisionNote String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@unique([employeeId, date])
+  @@index([status])
+  @@index([employeeId, date])
+  @@map("leave_requests")
 }
 
 // ---------- GAJI & PAYROLL ----------

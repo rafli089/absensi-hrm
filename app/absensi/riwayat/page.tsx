@@ -10,6 +10,7 @@ import { Badge, STATUS_ABSENSI } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatTanggal, formatJam, formatMenit } from "@/lib/utils";
 import { rentangTanggal, tanggal } from "@/lib/laporan/rekap";
+import { urlFoto } from "@/lib/absensi/foto";
 import Link from "next/link";
 import type { Prisma } from "@prisma/client";
 import type { AttendanceStatus } from "@prisma/client";
@@ -271,10 +272,10 @@ export default async function RiwayatPage({
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {a.photo ? (
-                        <a href={a.photo} target="_blank" rel="noreferrer" title="Lihat foto">
+                      {urlFoto(a.photo) ? (
+                        <a href={urlFoto(a.photo)!} target="_blank" rel="noreferrer" title="Lihat foto">
                           <img
-                            src={a.photo}
+                            src={urlFoto(a.photo)!}
                             alt={`Foto absensi ${a.employee?.fullName ?? ""} ${formatTanggal(a.date)}`}
                             loading="lazy"
                             className="size-10 cursor-zoom-in rounded-[8px] object-cover"

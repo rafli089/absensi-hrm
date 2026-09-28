@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { LayoutDashboard, Clock3, History, Users, Calendar, Wallet, ShieldAlert, FileText, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, Clock3, History, Users, Calendar, CalendarCheck, Wallet, ShieldAlert, FileText, Settings, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { type SessionUser } from "@/lib/auth/session";
 import { ROLE_LABEL, can, PERMISSIONS, type Permission } from "@/lib/auth/permissions";
@@ -16,6 +16,7 @@ const ITEMS: Item[] = [
   { label: "Riwayat", href: "/absensi/riwayat", Icon: History, need: PERMISSIONS.ATTENDANCE_HISTORY_SELF },
   { label: "Karyawan", href: "/karyawan", Icon: Users, need: PERMISSIONS.EMPLOYEE_MANAGE },
   { label: "Shift", href: "/shift", Icon: Calendar, need: PERMISSIONS.SHIFT_MANAGE },
+  { label: "Cuti", href: "/cuti", Icon: CalendarCheck, need: PERMISSIONS.LEAVE_REQUEST },
   { label: "Penggajian", href: "/penggajian", Icon: Wallet, need: PERMISSIONS.PAYSLIP_VIEW_SELF },
   { label: "Laporan", href: "/laporan", Icon: FileText, need: PERMISSIONS.REPORT_GENERATE },
   { label: "Keamanan", href: "/keamanan", Icon: ShieldAlert, need: PERMISSIONS.SECURITY_VIEW },

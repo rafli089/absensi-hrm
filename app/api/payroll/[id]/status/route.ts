@@ -4,6 +4,7 @@ import { requireApiPermission, clientIp } from "@/lib/auth/session";
 import { headers } from "next/headers";
 import { audit } from "@/lib/audit";
 import { izinUntuk, LANJUT } from "@/lib/payroll/status";
+import { kirimWebhook } from "@/lib/integrasi/kirim";
 
 /**
  * PATCH /api/payroll/[id]/status
@@ -45,7 +46,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
   const payroll = await prisma.payroll.findUnique({
     where: { id },
-    select: { id: true, status: true },
+    select: { id: true, status: true, employeeId: true, periodStart: true, periodEnd: true, netSalary: true },
   });
   if (!payroll) return Response.json({ error: "Payroll tidak ditemukan." }, { status: 404 });
 
@@ -80,6 +81,14 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     newValue: { status: parsed.status, reason: parsed.reason ?? null },
     ipAddress: clientIp(await headers()),
   }).catch(() => {});
+
+  if (parsed.status === "APPROVED" || parsed.status === "PAID") {
+    kirimWebhook("payroll.approved", {
+      payrollId: payroll.id, employeeId: payroll.employeeId,
+      periodStart: payroll.periodStart, periodEnd: payroll.periodEnd,
+      netSalary: payroll.netSalary.toString(), status: parsed.status,
+    });
+  }
 
   return Response.json({ ok: true, dari: payroll.status, ke: parsed.status });
 }

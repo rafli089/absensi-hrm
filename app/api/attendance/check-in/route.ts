@@ -10,6 +10,8 @@ import { headers } from "next/headers";
 import { clientIp } from "@/lib/auth/session";
 import { todayDate } from "@/lib/utils";
 import { fotoAbsen } from "@/lib/absensi/foto";
+import { saveFoto, deleteFoto } from "@/lib/absensi/fotoStorage";
+import { kirimWebhook, webhookPayloadAttendance } from "@/lib/integrasi/kirim";
 
 /** Validasi input check-in (PRD §10). */
 const bodyCheckIn = z.object({
@@ -104,31 +106,43 @@ export async function POST(req: Request) {
     checkIn: now, checkOut: null, gpsVerified: true,
   });
 
+  // --- Simpan foto ke object storage, DB cuma pegang path ---
+  const fotoPath = await saveFoto(parsed.photo);
+
   // --- Simpan (PRD §24: audit trail) ---
-  const attendance = await prisma.$transaction(async (tx) => {
-    const att = await tx.attendance.upsert({
-      where: { employeeId_date: { employeeId: auth.employeeId!, date: hariIni } },
-      update: { checkIn: now, photo: parsed.photo, latitude: parsed.latitude, longitude: parsed.longitude, accuracy: parsed.accuracy, distanceFromOffice: gps.distance, officeId: kantor.id, shiftId: assignment?.shiftId ?? null, ipAddress: ip, deviceId, status: hasil.status, lateMinutes: hasil.lateMinutes, earlyLeaveMinutes: 0, workMinutes: 0, overtimeMinutes: 0, rejectionReason: null },
-      create: { employeeId: auth.employeeId!, officeId: kantor.id, shiftId: assignment?.shiftId ?? null, date: hariIni, checkIn: now, photo: parsed.photo, latitude: parsed.latitude, longitude: parsed.longitude, accuracy: parsed.accuracy, distanceFromOffice: gps.distance, ipAddress: ip, deviceId, status: hasil.status, lateMinutes: hasil.lateMinutes, workMinutes: 0, overtimeMinutes: 0 },
-    });
+  let attendance;
+  try {
+    attendance = await prisma.$transaction(async (tx) => {
+      const att = await tx.attendance.upsert({
+        where: { employeeId_date: { employeeId: auth.employeeId!, date: hariIni } },
+        update: { checkIn: now, photo: fotoPath, latitude: parsed.latitude, longitude: parsed.longitude, accuracy: parsed.accuracy, distanceFromOffice: gps.distance, officeId: kantor.id, shiftId: assignment?.shiftId ?? null, ipAddress: ip, deviceId, status: hasil.status, lateMinutes: hasil.lateMinutes, earlyLeaveMinutes: 0, workMinutes: 0, overtimeMinutes: 0, rejectionReason: null },
+        create: { employeeId: auth.employeeId!, officeId: kantor.id, shiftId: assignment?.shiftId ?? null, date: hariIni, checkIn: now, photo: fotoPath, latitude: parsed.latitude, longitude: parsed.longitude, accuracy: parsed.accuracy, distanceFromOffice: gps.distance, ipAddress: ip, deviceId, status: hasil.status, lateMinutes: hasil.lateMinutes, workMinutes: 0, overtimeMinutes: 0 },
+      });
 
-    await tx.attendanceEvent.create({
-      data: {
-        attendanceId: att.id, employeeId: auth.employeeId!, eventType: "CHECK_IN", timestamp: now,
-        latitude: parsed.latitude, longitude: parsed.longitude, accuracy: parsed.accuracy,
-        deviceId, ipAddress: ip, photo: parsed.photo,
-        metadata: { distance: gps.distance, photoTakenAt: parsed.takenAt },
-      },
-    });
+      await tx.attendanceEvent.create({
+        data: {
+          attendanceId: att.id, employeeId: auth.employeeId!, eventType: "CHECK_IN", timestamp: now,
+          latitude: parsed.latitude, longitude: parsed.longitude, accuracy: parsed.accuracy,
+          deviceId, ipAddress: ip, photo: fotoPath,
+          metadata: { distance: gps.distance, photoTakenAt: parsed.takenAt },
+        },
+      });
 
-    await tx.employeeLocation.create({
-      data: { employeeId: auth.employeeId!, latitude: parsed.latitude, longitude: parsed.longitude, accuracy: parsed.accuracy, capturedAt: now },
-    });
+      await tx.employeeLocation.create({
+        data: { employeeId: auth.employeeId!, latitude: parsed.latitude, longitude: parsed.longitude, accuracy: parsed.accuracy, capturedAt: now },
+      });
 
-    return att;
-  });
+      return att;
+    });
+  } catch (e) {
+    // DB gagal → jangan sampai file foto jadi yatim di disk.
+    await deleteFoto(fotoPath);
+    throw e;
+  }
 
   await audit({ userId: auth.id, action: "CREATE", entityType: "attendance", entityId: attendance.id, newValue: { checkIn: now, status: hasil.status, distance: gps.distance }, ipAddress: ip }).catch(() => {});
+  const payload = webhookPayloadAttendance({ id: attendance.id, employeeId: auth.employeeId ?? "", date: new Date(hariIni), status: hasil.status, checkIn: now, checkOut: null });
+  kirimWebhook("attendance.created", payload);
 
   return Response.json({ ok: true, attendance: { id: attendance.id, checkIn: attendance.checkIn, status: hasil.status, lateMinutes: hasil.lateMinutes, jarak: gps.distance } });
 }

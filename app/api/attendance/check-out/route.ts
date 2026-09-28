@@ -9,6 +9,7 @@ import { audit, catatKeamanan } from "@/lib/audit";
 import { headers } from "next/headers";
 import { todayDate } from "@/lib/utils";
 import { fotoAbsen } from "@/lib/absensi/foto";
+import { saveFoto, deleteFoto } from "@/lib/absensi/fotoStorage";
 
 const bodyCheckOut = z.object({
   photo: fotoAbsen,
@@ -100,29 +101,39 @@ export async function POST(req: Request) {
     checkIn: attendance!.checkIn, checkOut: now, gpsVerified: true,
   });
 
-  const updated = await prisma.$transaction(async (tx) => {
-    const att = await tx.attendance.update({
-      where: { id: attendance!.id },
-      data: {
-        checkOut: now, latitude: parsed.latitude, longitude: parsed.longitude,
-        accuracy: parsed.accuracy, distanceFromOffice: gps.distance,
-        status: hasil.status, lateMinutes: hasil.lateMinutes,
-        earlyLeaveMinutes: hasil.earlyLeaveMinutes, workMinutes: hasil.workMinutes,
-        overtimeMinutes: hasil.overtimeMinutes,
-      },
-    });
+  // Foto check-out disimpan sebagai event (bukan menimpa `attendance.photo`
+  // yang berisi foto check-in) — dua bukti berbeda, dua file berbeda.
+  const fotoPath = await saveFoto(parsed.photo);
 
-    await tx.attendanceEvent.create({
-      data: {
-        attendanceId: att.id, employeeId: auth.employeeId!, eventType: "CHECK_OUT", timestamp: now,
-        latitude: parsed.latitude, longitude: parsed.longitude, accuracy: parsed.accuracy,
-        deviceId, ipAddress: ip, photo: parsed.photo,
-        metadata: { distance: gps.distance, workMinutes: hasil.workMinutes, photoTakenAt: parsed.takenAt },
-      },
-    });
+  let updated;
+  try {
+    updated = await prisma.$transaction(async (tx) => {
+      const att = await tx.attendance.update({
+        where: { id: attendance!.id },
+        data: {
+          checkOut: now, latitude: parsed.latitude, longitude: parsed.longitude,
+          accuracy: parsed.accuracy, distanceFromOffice: gps.distance,
+          status: hasil.status, lateMinutes: hasil.lateMinutes,
+          earlyLeaveMinutes: hasil.earlyLeaveMinutes, workMinutes: hasil.workMinutes,
+          overtimeMinutes: hasil.overtimeMinutes,
+        },
+      });
 
-    return att;
-  });
+      await tx.attendanceEvent.create({
+        data: {
+          attendanceId: att.id, employeeId: auth.employeeId!, eventType: "CHECK_OUT", timestamp: now,
+          latitude: parsed.latitude, longitude: parsed.longitude, accuracy: parsed.accuracy,
+          deviceId, ipAddress: ip, photo: fotoPath,
+          metadata: { distance: gps.distance, workMinutes: hasil.workMinutes, photoTakenAt: parsed.takenAt },
+        },
+      });
+
+      return att;
+    });
+  } catch (e) {
+    await deleteFoto(fotoPath);
+    throw e;
+  }
 
   await audit({ userId: auth.id, action: "UPDATE", entityType: "attendance", entityId: updated.id, oldValue: { checkOut: null, status: attendance!.status }, newValue: { checkOut: now, status: hasil.status, workMinutes: hasil.workMinutes }, ipAddress: ip }).catch(() => {});
 
