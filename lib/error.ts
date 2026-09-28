@@ -46,8 +46,8 @@ export class NotFoundError extends AppError {
 
 /** Sudah ada — 409. */
 export class ConflictError extends AppError {
-  constructor(resource: string, id: string) {
-    super(`${resource} sudah ada: ${id}`, "CONFLICT", 409);
+  constructor(resource: string, id: string, customMessage?: string) {
+    super(customMessage ?? `${resource} sudah ada: ${id}`, "CONFLICT", 409);
     this.name = "ConflictError";
   }
 }

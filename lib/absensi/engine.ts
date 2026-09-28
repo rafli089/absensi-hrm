@@ -21,7 +21,7 @@ export type AbsensiInput = {
   overtimeStart?: Date | null;
   overtimeEnd?: Date | null;
   gpsVerified: boolean;
-  /** Status dari modul lain (cuti/sakit/libur) — Default null di MVP karena Leave Phase 2. */
+  /** Status dari modul lain (cuti disetujui → LEAVE). Menang atas perhitungan. */
   presetStatus?: AttendanceStatus | null;
 };
 

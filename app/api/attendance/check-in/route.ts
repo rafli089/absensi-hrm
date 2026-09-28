@@ -97,6 +97,15 @@ export async function POST(req: Request) {
     include: { shift: true },
   });
 
+  // Status dari modul lain: cuti disetujui hari ini → attendance tetap LEAVE
+  // walaupun karyawan mencoba check-in (PRD §6.12). Status lain di-engine
+  // ("REJECTED" dst) tetap dihitung normal.
+  const cutiHariIni = await prisma.leaveRequest.findFirst({
+    where: { employeeId: auth.employeeId, date: hariIni, status: "APPROVED" },
+    select: { id: true },
+  });
+  const presetStatus = cutiHariIni ? "LEAVE" : null;
+
   const now = new Date();
   const hasil = hitungAbsensi({
     shift: assignment?.shift ? {
@@ -104,7 +113,7 @@ export async function POST(req: Request) {
       breakStart: assignment.shift.breakStart, breakEnd: assignment.shift.breakEnd,
       gracePeriod: assignment.shift.gracePeriod, isOvernight: assignment.shift.isOvernight,
     } : null,
-    checkIn: now, checkOut: null, gpsVerified: true,
+    checkIn: now, checkOut: null, gpsVerified: true, presetStatus,
   });
 
   // --- Simpan foto ke object storage, DB cuma pegang path ---

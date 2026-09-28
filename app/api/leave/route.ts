@@ -170,9 +170,9 @@ export async function PATCH(req: Request) {
   }
 
   // APPROVED → tulis/oversiapkan baris attendance LEAVE (PRD §6.12:
-  // "attendance updated"). upsert menjaga keunikan [employeeId, date];
-  // karyawan tidak bisa check-in lagi karena POST menolak tanggal
-  // yang sudah ada baris attendance.
+  // "attendance updated"). Hanya set status LEAVE kalau hari itu belum ada
+  // check-in sungguhan (checkIn null) — jangan menimpa PRESENT yang nyata.
+  // Check-in berikutnya tetap status LEAVE via presetStatus di check-in route.
   void await prisma.$transaction(async (tx) => {
     const lr = await tx.leaveRequest.update({
       where: { id },
@@ -185,11 +185,21 @@ export async function PATCH(req: Request) {
     });
 
     if (keputusan === "APPROVED") {
-      await tx.attendance.upsert({
+      const att = await tx.attendance.findUnique({
         where: { employeeId_date: { employeeId: existing.employeeId, date: existing.date } },
-        update: { status: "LEAVE" },
-        create: { employeeId: existing.employeeId, date: existing.date, status: "LEAVE" },
+        select: { id: true, checkIn: true },
       });
+      if (!att) {
+        await tx.attendance.create({
+          data: { employeeId: existing.employeeId, date: existing.date, status: "LEAVE" },
+        });
+      } else if (!att.checkIn) {
+        await tx.attendance.update({
+          where: { id: att.id },
+          data: { status: "LEAVE" },
+        });
+      }
+      // else: sudah hadir hari itu — biarkan attendance apa adanya.
     }
     return lr;
   });

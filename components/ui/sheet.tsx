@@ -34,7 +34,7 @@ export const SheetContent = React.forwardRef<
       {...props}
     >
       {children}
-      <DialogPrimitive.Close className="absolute right-4 top-4 rounded-lg p-1.5 text-[var(--ink-2)] transition-colors hover:bg-black/[0.05] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]">
+      <DialogPrimitive.Close className="absolute right-4 top-4 rounded-lg p-1.5 text-[var(--ink-2)] transition-colors hover:bg-black/[0.05] focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[var(--brand)]">
         <X className="size-4" />
         <span className="sr-only">Tutup</span>
       </DialogPrimitive.Close>

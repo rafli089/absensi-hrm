@@ -25,6 +25,15 @@ test("ConflictError punya status 409 dan kode CONFLICT", () => {
   const e = new ConflictError("Karyawan", "duplikat email");
   assert.equal(e.status, 409);
   assert.equal(e.code, "CONFLICT");
+  assert.match(e.message, /duplikat email/);
+});
+
+test("ConflictError overload 3-arg: customMessage menggantikan pesan default", () => {
+  const e = new ConflictError("Karyawan", "duplikat email", "Anda sudah check-in hari ini.");
+  assert.equal(e.status, 409);
+  assert.equal(e.code, "CONFLICT");
+  assert.equal(e.message, "Anda sudah check-in hari ini.");
+  assert.ok(!e.message.includes("duplikat email"));
 });
 
 test("ValidationError punya status 422 dan fields terbawa", () => {
