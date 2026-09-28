@@ -2,6 +2,7 @@ import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import { validasiUrlWebhook, PREFIX, JENIS_KEJADIAN } from "../lib/integrasi/webhook.ts";
 import { urlFoto } from "../lib/absensi/foto.ts";
+import { isSlack, bodySlack, bodyGenerik } from "../lib/integrasi/kirim.ts";
 
 describe("validasiUrlWebhook", () => {
   test("https publik diterima", () => {
@@ -58,6 +59,27 @@ describe("validasiUrlWebhook", () => {
 
   test("host .internal ditolak", () => {
     assert.equal(validasiUrlWebhook("https://payroll.internal/hook").ok, false);
+  });
+});
+
+describe("kirim.ts — adapter Slack vs generik", () => {
+  test("isSlack true untuk hooks.slack.com", () => {
+    assert.equal(isSlack("https://hooks.slack.com/services/T00/B00/xxx"), true);
+  });
+  test("isSlack false untuk n8n", () => {
+    assert.equal(isSlack("https://webhook.n8n.cloud/webhook/test"), false);
+  });
+  test("bodySlack format ringkas", () => {
+    const b = bodySlack("attendance.created", { employeeCode: "EMP01", status: "PRESENT" });
+    assert.ok(b.text.includes("*Absensi masuk*"));
+    assert.ok(b.text.includes("employeeCode: EMP01"));
+    assert.ok(b.text.includes("status: PRESENT"));
+  });
+  test("bodyGenerik format event+data", () => {
+    const b = bodyGenerik("leave.decided", { leaveId: "L1", status: "APPROVED" });
+    assert.equal(b.event, "leave.decided");
+    assert.ok(typeof b.timestamp === "string");
+    assert.equal(b.data.leaveId, "L1");
   });
 });
 
