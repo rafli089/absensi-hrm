@@ -3,6 +3,7 @@ import { PERMISSIONS } from "@/lib/auth/permissions";
 import { headers } from "next/headers";
 import { audit } from "@/lib/audit";
 import { ambilLaporan, keCsv, ringkas, type FilterLaporan } from "@/lib/laporan/rekap";
+import { AppError, toResponse } from "@/lib/error";
 
 /**
  * Export CSV rekap absensi (PRD §16).
@@ -34,12 +35,12 @@ export async function GET(req: Request) {
   };
 
   if (!f.dari || !f.sampai) {
-    return Response.json({ error: "?dari=YYYY-MM-DD dan ?sampai=YYYY-MM-DD wajib." }, { status: 400 });
+    return toResponse(new AppError("?dari=YYYY-MM-DD dan ?sampai=YYYY-MM-DD wajib.", "PARAM_WAJIB", 400));
   }
 
   const format = url.searchParams.get("format");
   if (format !== "csv") {
-    return Response.json({ error: "?format=csv wajib." }, { status: 400 });
+    return toResponse(new AppError("?format=csv wajib.", "FORMAT_WAJIB", 400));
   }
 
   const baris = await ambilLaporan(f);

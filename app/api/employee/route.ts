@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { ConflictError, toResponse } from "@/lib/error";
+import { AppError } from "@/lib/error";
 import { requireApiPermission, clientIp } from "@/lib/auth/session";
 import { PERMISSIONS } from "@/lib/auth/permissions";
 import { headers } from "next/headers";
@@ -20,7 +21,7 @@ export async function POST(req: Request) {
   if (auth instanceof Response) return auth;
 
   const parsed = await parseKaryawan(await req.json().catch(() => null));
-  if (!parsed.ok) return Response.json({ error: parsed.error }, { status: parsed.status });
+  if (!parsed.ok) return toResponse(new AppError(parsed.error, "VALIDASI_KARYAWAN", parsed.status));
 
   try {
     const karyawan = await prisma.employee.create({ data: parsed.data });

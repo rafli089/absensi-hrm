@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { audit } from "@/lib/audit";
 import { izinUntuk, LANJUT } from "@/lib/payroll/status";
 import { kirimWebhook } from "@/lib/integrasi/kirim";
+import { AppError, toResponse } from "@/lib/error";
 
 /**
  * PATCH /api/payroll/[id]/status
@@ -34,27 +35,24 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     parsed = body.parse(await req.json());
   } catch (e) {
     const pesan = e instanceof z.ZodError ? (e.issues[0]?.message ?? "Format tidak valid.") : "Format tidak valid.";
-    return Response.json({ error: pesan }, { status: 400 });
+    return toResponse(new AppError(pesan, "FORMAT_TIDAK_VALID", 400));
   }
 
   const auth = await requireApiPermission(izinUntuk(parsed.status));
   if (auth instanceof Response) return auth;
 
   if (parsed.status === "DRAFT" && !parsed.reason) {
-    return Response.json({ error: "Transisi ke DRAFT wajib menyertakan alasan." }, { status: 400 });
+    return toResponse(new AppError("Transisi ke DRAFT wajib menyertakan alasan.", "ALASAN_WAJIB", 400));
   }
 
   const payroll = await prisma.payroll.findUnique({
     where: { id },
     select: { id: true, status: true, employeeId: true, periodStart: true, periodEnd: true, netSalary: true },
   });
-  if (!payroll) return Response.json({ error: "Payroll tidak ditemukan." }, { status: 404 });
+  if (!payroll) return toResponse(new AppError("Payroll tidak ditemukan.", "PAYROLL_TIDAK_ADA", 404));
 
   if (!LANJUT[payroll.status]?.includes(parsed.status)) {
-    return Response.json(
-      { error: `Payroll berstatus ${payroll.status} tidak bisa berubah menjadi ${parsed.status}.` },
-      { status: 409 },
-    );
+    return toResponse(new AppError(`Payroll berstatus ${payroll.status} tidak bisa berubah menjadi ${parsed.status}.`, "STATUS_TIDAK_VALID", 409));
   }
 
   const data: Record<string, unknown> = { status: parsed.status };

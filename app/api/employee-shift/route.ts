@@ -4,6 +4,7 @@ import { requireApiPermission, clientIp } from "@/lib/auth/session";
 import { PERMISSIONS } from "@/lib/auth/permissions";
 import { headers } from "next/headers";
 import { audit } from "@/lib/audit";
+import { AppError, toResponse } from "@/lib/error";
 
 /**
  * Assign shift ke karyawan per tanggal (PRD §14).
@@ -29,7 +30,7 @@ export async function GET(req: Request) {
 
   const url = new URL(req.url);
   const dateStr = url.searchParams.get("date");
-  if (!dateStr) return Response.json({ error: "Parameter ?date=YYYY-MM-DD wajib." }, { status: 400 });
+  if (!dateStr) return toResponse(new AppError("Parameter ?date=YYYY-MM-DD wajib.", "PARAM_WAJIB", 400));
 
   const date = new Date(dateStr + "T00:00:00.000Z");
   const assign = await prisma.employeeShift.findMany({
@@ -52,7 +53,7 @@ export async function POST(req: Request) {
     parsed = bodyAssign.parse(await req.json());
   } catch (e) {
     const pesan = e instanceof z.ZodError ? (e.issues[0]?.message ?? "Format tidak valid.") : "Format tidak valid.";
-    return Response.json({ error: pesan }, { status: 400 });
+    return toResponse(new AppError(pesan, "FORMAT_TIDAK_VALID", 400));
   }
 
   const date = new Date(parsed.date + "T00:00:00.000Z");
@@ -62,9 +63,9 @@ export async function POST(req: Request) {
     prisma.shift.findUnique({ where: { id: parsed.shiftId }, select: { id: true, name: true } }),
   ]);
 
-  if (!employee) return Response.json({ error: "Karyawan tidak ditemukan." }, { status: 400 });
-  if (!employee.isActive) return Response.json({ error: "Karyawan nonaktif." }, { status: 400 });
-  if (!shift) return Response.json({ error: "Shift tidak ditemukan." }, { status: 400 });
+  if (!employee) return toResponse(new AppError("Karyawan tidak ditemukan.", "KARYAWAN_TIDAK_ADA", 400));
+  if (!employee.isActive) return toResponse(new AppError("Karyawan nonaktif.", "KARYAWAN_NONAKTIF", 400));
+  if (!shift) return toResponse(new AppError("Shift tidak ditemukan.", "SHIFT_TIDAK_ADA", 400));
 
   const result = await prisma.employeeShift.upsert({
     where: { employeeId_date: { employeeId: parsed.employeeId, date } },
@@ -91,10 +92,10 @@ export async function DELETE(req: Request) {
 
   const url = new URL(req.url);
   const id = url.searchParams.get("id");
-  if (!id) return Response.json({ error: "Parameter ?id= wajib." }, { status: 400 });
+  if (!id) return toResponse(new AppError("Parameter ?id= wajib.", "PARAM_WAJIB", 400));
 
   const target = await prisma.employeeShift.findUnique({ where: { id } });
-  if (!target) return Response.json({ error: "Assign tidak ditemukan." }, { status: 404 });
+  if (!target) return toResponse(new AppError("Assign tidak ditemukan.", "ASSIGN_TIDAK_ADA", 404));
 
   await prisma.employeeShift.delete({ where: { id } });
   await audit({

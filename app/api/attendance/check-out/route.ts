@@ -10,6 +10,7 @@ import { headers } from "next/headers";
 import { todayDate } from "@/lib/utils";
 import { fotoAbsen } from "@/lib/absensi/foto";
 import { saveFoto, deleteFoto } from "@/lib/absensi/fotoStorage";
+import { AppError, toResponse } from "@/lib/error";
 
 const bodyCheckOut = z.object({
   photo: fotoAbsen,
@@ -27,7 +28,7 @@ export async function POST(req: Request) {
   if (auth instanceof Response) return auth;
 
   if (!auth.employeeId) {
-    return Response.json({ error: "Akun Anda belum terhubung ke data karyawan." }, { status: 403 });
+    return toResponse(new AppError("Akun Anda belum terhubung ke data karyawan.", "AKUN_TANPA_KARYAWAN", 403));
   }
 
   const rate = izinkan(`checkout:${auth.id}`, 10, 60_000);
@@ -37,14 +38,14 @@ export async function POST(req: Request) {
       severity: "MEDIUM", ipAddress: clientIp(await headers()),
       description: `Rate limit check-out tercapai untuk ${auth.email}`,
     }).catch(() => {});
-    return Response.json({ error: "Terlalu banyak percobaan. Tunggu sebentar." }, { status: 429 });
+    return toResponse(new AppError("Terlalu banyak percobaan. Tunggu sebentar.", "RATE_LIMITED", 429));
   }
 
   let parsed;
   try { parsed = bodyCheckOut.parse(await req.json()); }
   catch (e) {
     const pesan = e instanceof z.ZodError ? e.issues[0]?.message : "Format data tidak valid.";
-    return Response.json({ error: pesan }, { status: 400 });
+    return toResponse(new AppError(pesan, "FORMAT_TIDAK_VALID", 400));
   }
 
   const ip = clientIp(await headers());
@@ -52,7 +53,7 @@ export async function POST(req: Request) {
 
   // --- Cegah replay ---
   if (Date.now() - new Date(parsed.takenAt).getTime() > JENDELA_FOTO_MS) {
-    return Response.json({ error: "Sesi absensi sudah kedaluwarsa. Ambil foto lagi.", kode: "FOTO_KEDALUWARSA" }, { status: 400 });
+    return toResponse(new AppError("Sesi absensi sudah kedaluwarsa. Ambil foto lagi.", "FOTO_KEDALUWARSA", 400));
   }
 
   // --- Aturan §25.2: check-out hanya setelah check-in ---
@@ -63,16 +64,16 @@ export async function POST(req: Request) {
 
   const invalid = validasiCheckOut(Boolean(attendance?.checkIn));
   if (invalid) {
-    return Response.json({ error: invalid.message, kode: invalid.code }, { status: 409 });
+    return toResponse(new AppError(invalid.message, invalid.code, 409));
   }
   if (attendance!.checkOut) {
-    return Response.json({ error: "Anda sudah check-out hari ini." }, { status: 409 });
+    return toResponse(new AppError("Anda sudah check-out hari ini.", "SUDAH_CHECK_OUT", 409));
   }
 
   // --- Validasi GPS ---
   const kantor = await prisma.office.findFirst({ where: { isActive: true } });
   if (!kantor) {
-    return Response.json({ error: "Kantor belum dikonfigurasi. Hubungi admin." }, { status: 500 });
+    return toResponse(new AppError("Kantor belum dikonfigurasi. Hubungi admin.", "KANTOR_BELUM_SET", 500));
   }
   const gps = validateLocation({ latitude: parsed.latitude, longitude: parsed.longitude, accuracy: parsed.accuracy }, kantor);
   if (!gps.ok) {
@@ -82,7 +83,7 @@ export async function POST(req: Request) {
       latitude: parsed.latitude, longitude: parsed.longitude,
       description: `Check-out ditolak: ${gps.reason}`,
     }).catch(() => {});
-    return Response.json({ error: gps.reason, kode: "GPS_TIDAK_VALID" }, { status: 422 });
+    return toResponse(new AppError(gps.reason, "GPS_TIDAK_VALID", 422));
   }
 
   // --- Ambil shift & hitung status final ---

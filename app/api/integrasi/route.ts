@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { requireApiPermission } from "@/lib/auth/session";
 import { PERMISSIONS } from "@/lib/auth/permissions";
 import { validasiUrlWebhook, PREFIX, JENIS_KEJADIAN } from "@/lib/integrasi/webhook";
+import { AppError, toResponse } from "@/lib/error";
 
 /**
  * Integrasi eksternal yang dirancang sebagai webhook generik supaya
@@ -44,14 +45,14 @@ export async function PUT(req: Request) {
 
   const body = await req.json().catch(() => null);
   if (!body || typeof body.event !== "string" || !JENIS_KEJADIAN.includes(body.event as (typeof JENIS_KEJADIAN)[number])) {
-    return Response.json({ error: "Event tidak dikenal.", kode: "EVENT_INVALID" }, { status: 400 });
+    return toResponse(new AppError("Event tidak dikenal.", "EVENT_INVALID", 400));
   }
 
   const url = typeof body.url === "string" ? body.url.trim() : "";
   if (url) {
     const valid = validasiUrlWebhook(url);
     if (!valid.ok) {
-      return Response.json({ error: valid.pesan, kode: valid.kode }, { status: 422 });
+      return toResponse(new AppError(valid.pesan, valid.kode, 422));
     }
     await prisma.appSetting.upsert({
       where: { key: `${PREFIX}${body.event}` },

@@ -1,4 +1,4 @@
-import { ConflictError, NotFoundError, toResponse } from "@/lib/error";
+import { ConflictError, NotFoundError, toResponse, AppError } from "@/lib/error";
 import { prisma } from "@/lib/db";
 import { requireApiPermission, clientIp } from "@/lib/auth/session";
 import { PERMISSIONS } from "@/lib/auth/permissions";
@@ -51,7 +51,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   if (!lama) return toResponse(new NotFoundError("Karyawan", id));
 
   const parsed = await parseKaryawan(await req.json().catch(() => null));
-  if (!parsed.ok) return Response.json({ error: parsed.error }, { status: parsed.status });
+  if (!parsed.ok) return toResponse(new AppError(parsed.error, "VALIDASI_KARYAWAN", parsed.status));
 
   try {
     const karyawan = await prisma.employee.update({ where: { id }, data: parsed.data });

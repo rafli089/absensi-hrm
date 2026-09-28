@@ -11,6 +11,7 @@ import {
   type ComponentInput,
   type AttendanceSummary,
 } from "@/lib/payroll/hitung";
+import { AppError, toResponse } from "@/lib/error";
 
 /**
  * Jalankan kalkulasi payroll untuk periode tertentu.
@@ -46,7 +47,7 @@ export async function POST(req: Request) {
     parsed = bodyCalc.parse(await req.json());
   } catch (e) {
     const pesan = e instanceof z.ZodError ? (e.issues[0]?.message ?? "Format tidak valid.") : "Format tidak valid.";
-    return Response.json({ error: pesan }, { status: 400 });
+    return toResponse(new AppError(pesan, "FORMAT_TIDAK_VALID", 400));
   }
 
   // Kolom @db.Date menyimpan bagian tanggal UTC. new Date("YYYY-MM-DD") sudah
@@ -56,7 +57,7 @@ export async function POST(req: Request) {
   const periodEnd = new Date(parsed.periodEnd + "T00:00:00.000Z");
 
   if (periodEnd < periodStart) {
-    return Response.json({ error: "Periode selesai harus setelah periode mulai." }, { status: 400 });
+    return toResponse(new AppError("Periode selesai harus setelah periode mulai.", "PERIODE_TIDAK_VALID", 400));
   }
 
   // Komponen gaji aktif
@@ -88,7 +89,7 @@ export async function POST(req: Request) {
   });
 
   if (karyawan.length === 0) {
-    return Response.json({ error: "Tidak ada karyawan yang diproses." }, { status: 400 });
+    return toResponse(new AppError("Tidak ada karyawan yang diproses.", "TIDAK_ADA_KARYAWAN", 400));
   }
 
   // Salary structure per karyawan (aktif di periode)

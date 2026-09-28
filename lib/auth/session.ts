@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import type { Role } from "@prisma/client";
 import { can, type Permission } from "./permissions";
+import { UnauthorizedError, ForbiddenError, toResponse } from "@/lib/error";
 
 const COOKIE = "absensi_session";
 const MAX_AGE = 60 * 60 * 8; // 8 jam
@@ -122,8 +123,8 @@ export async function requirePermission(permission: Permission): Promise<Session
 /** Guard API: return 401/403, bukan redirect (dipakai route handler). */
 export async function requireApiPermission(permission: Permission): Promise<SessionUser | Response> {
   const user = await getSessionUser();
-  if (!user) return Response.json({ error: "Tidak terautentikasi." }, { status: 401 });
-  if (!can(user.role, permission)) return Response.json({ error: "Akses ditolak." }, { status: 403 });
+  if (!user) return toResponse(new UnauthorizedError());
+  if (!can(user.role, permission)) return toResponse(new ForbiddenError());
   return user;
 }
 

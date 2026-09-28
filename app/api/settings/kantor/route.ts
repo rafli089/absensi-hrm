@@ -5,6 +5,7 @@ import { PERMISSIONS } from "@/lib/auth/permissions";
 import { headers } from "next/headers";
 import { clientIp } from "@/lib/auth/session";
 import { audit } from "@/lib/audit";
+import { AppError, toResponse } from "@/lib/error";
 
 /** 
  * Konfigurasi lokasi kantor (PRD §12, §6.4).
@@ -36,7 +37,7 @@ export async function PUT(req: Request) {
     parsed = bodyKantor.parse(await req.json());
   } catch (e) {
     const pesan = e instanceof z.ZodError ? (e.issues[0]?.message ?? "Format tidak valid.") : "Format tidak valid.";
-    return Response.json({ error: pesan }, { status: 400 });
+    return toResponse(new AppError(pesan, "FORMAT_TIDAK_VALID", 400));
   }
 
   const existing = await prisma.office.findFirst({ where: { isActive: true } });

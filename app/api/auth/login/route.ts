@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { createSession, clientIp } from "@/lib/auth/session";
 import { audit, catatKeamanan } from "@/lib/audit";
 import { izinkan, resetKunci } from "@/lib/keamanan/rate-limit";
+import { AppError, toResponse } from "@/lib/error";
 
 /** Batas percobaan login gagal: 5 dalam 10 menit per kombinasi IP+email. */
 const MAKS_GAGAL = 5;
@@ -29,16 +30,13 @@ export async function POST(req: Request) {
       ipAddress: ip,
       description: `Rate limit login terlampaui untuk ${email}.`,
     }).catch(() => {});
-    return NextResponse.json(
-      { error: "Terlalu banyak percobaan. Silakan coba lagi nanti." },
-      { status: 429 },
-    );
+    return toResponse(new AppError("Terlalu banyak percobaan. Silakan coba lagi nanti.", "RATE_LIMITED", 429));
   }
 
   const password = String(fd?.get("password") ?? "");
 
   if (!email || !password) {
-    return NextResponse.json({ error: "Email dan kata sandi wajib diisi." }, { status: 400 });
+    return toResponse(new AppError("Email dan kata sandi wajib diisi.", "FORMAT_TIDAK_VALID", 400));
   }
 
   const user = await prisma.user.findUnique({
@@ -58,7 +56,7 @@ export async function POST(req: Request) {
       ipAddress: ip,
       description: `Login gagal untuk ${email}.`,
     }).catch(() => {});
-    return NextResponse.json({ error: gagal }, { status: 401 });
+    return toResponse(new AppError(gagal, "KREDENSIAL_SALAH", 401));
   }
 
   // Berhasil → jangan mewarisi riwayat kegagalan. Kalau tidak, lima kali
@@ -67,11 +65,11 @@ export async function POST(req: Request) {
   resetKunci(kunci);
 
   if (user.status !== "ACTIVE") {
-    return NextResponse.json({ error: "Akun Anda tidak aktif. Hubungi admin." }, { status: 403 });
+    return toResponse(new AppError("Akun Anda tidak aktif. Hubungi admin.", "AKUN_NONAKTIF", 403));
   }
 
   if (user.employee && !user.employee.isActive) {
-    return NextResponse.json({ error: "Status karyawan Anda tidak aktif. Hubungi HR." }, { status: 403 });
+    return toResponse(new AppError("Status karyawan Anda tidak aktif. Hubungi HR.", "KARYAWAN_NONAKTIF", 403));
   }
 
   const deviceLabel = ua?.slice(0, 120);
