@@ -23,7 +23,7 @@ export default async function PayrollPage() {
   if (!lihatSemua && !user.employeeId) {
     return (
       <AppShell user={user} maxWidth="max-w-[1100px]">
-        <p className="text-sm text-[var(--ink-2)]">Akun Anda belum terhubung ke data karyawan.</p>
+        <p className="text-body text-[var(--ink-2)]">Akun Anda belum terhubung ke data karyawan.</p>
       </AppShell>
     );
   }
@@ -43,8 +43,8 @@ export default async function PayrollPage() {
     <AppShell user={user} maxWidth="max-w-[1100px]" className="space-y-6">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-[28px] font-semibold tracking-[-0.02em] text-[var(--ink)]">Penggajian</h1>
-          <p className="text-[15px] text-[var(--ink-2)]">
+          <h1 className="text-display font-semibold tracking-[-0.02em] text-[var(--ink)]">Penggajian</h1>
+          <p className="text-body text-[var(--ink-2)]">
             {lihatSemua ? `${payrolls.length} payroll terbaru` : "Payroll Anda"}
           </p>
         </div>
@@ -56,7 +56,7 @@ export default async function PayrollPage() {
           {payrolls.length === 0 ? (
             <div className="flex flex-col items-center gap-2 py-8 text-center">
               <Wallet className="size-10 text-[var(--ink-2)]/40" aria-hidden />
-              <p className="text-[13px] text-[var(--ink-2)]">
+              <p className="text-caption text-[var(--ink-2)]">
                 {lihatSemua
                   ? "Belum ada data payroll. Gunakan tombol kalkulasi untuk menghitung periode berjalan."
                   : "Payroll tersedia setelah HR menghitung dan menyetujui data gaji Anda."}
@@ -98,7 +98,7 @@ export default async function PayrollPage() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Link href={`/penggajian/${p.id}/slip`} className="text-[13px] text-[var(--brand)] hover:underline">
+                      <Link href={`/penggajian/${p.id}/slip`} className="text-caption text-[var(--brand-ink)] hover:underline">
                         Lihat
                       </Link>
                     </TableCell>
@@ -125,3 +125,4 @@ export default async function PayrollPage() {
     </AppShell>
   );
 }
+

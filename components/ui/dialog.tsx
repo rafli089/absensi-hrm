@@ -14,12 +14,12 @@ export const DialogContent = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & { hideClose?: boolean }
 >(({ className, children, hideClose, ...props }, ref) => (
   <DialogPrimitive.Portal>
-    <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/25 backdrop-blur-[2px] data-[state=open]:animate-in data-[state=open]:fade-in-0" />
+    <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/25 backdrop-blur-[6px] data-[state=open]:animate-in data-[state=open]:fade-in-0" />
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
         "fixed left-1/2 top-1/2 z-50 w-[calc(100vw-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2",
-        "rounded-[24px] border border-[var(--border)] bg-[var(--surface)] shadow-[0_20px_60px_rgba(0,0,0,0.15)]",
+        "rounded-[var(--radius-xl)] bg-[color-mix(in_srgb,var(--surface)_88%,transparent)] backdrop-blur-[30px] backdrop-saturate-150 shadow-[var(--shadow-xl)]",
         "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
         "max-h-[calc(100vh-4rem)] overflow-y-auto",
         className,
@@ -46,7 +46,7 @@ export const DialogTitle = React.forwardRef<
   React.ComponentRef<typeof DialogPrimitive.Title>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
 >(({ className, ...props }, ref) => (
-  <DialogPrimitive.Title ref={ref} className={cn("text-[17px] font-semibold tracking-[-0.01em]", className)} {...props} />
+  <DialogPrimitive.Title ref={ref} className={cn("text-h2 font-semibold tracking-[-0.01em]", className)} {...props} />
 ));
 DialogTitle.displayName = "DialogTitle";
 
@@ -54,7 +54,7 @@ export const DialogDescription = React.forwardRef<
   React.ComponentRef<typeof DialogPrimitive.Description>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
 >(({ className, ...props }, ref) => (
-  <DialogPrimitive.Description ref={ref} className={cn("text-[13px] text-[var(--ink-2)]", className)} {...props} />
+  <DialogPrimitive.Description ref={ref} className={cn("text-caption text-[var(--ink-2)]", className)} {...props} />
 ));
 DialogDescription.displayName = "DialogDescription";
 

@@ -8,9 +8,10 @@ import { izinkan } from "@/lib/keamanan/rate-limit";
 import { audit, catatKeamanan } from "@/lib/audit";
 import { headers } from "next/headers";
 import { todayDate } from "@/lib/utils";
+import { fotoAbsen } from "@/lib/absensi/foto";
 
 const bodyCheckOut = z.object({
-  photo: z.string().min(1).max(2_000_000), // dataURL JPEG dari client (~1.3MB biner)
+  photo: fotoAbsen,
   latitude: z.number().min(-90).max(90),
   longitude: z.number().min(-180).max(180),
   accuracy: z.number().min(0).max(100000),

@@ -13,7 +13,7 @@ export default async function EditKaryawanPage({ params }: { params: Promise<{ i
   if (!can(user.role, PERMISSIONS.EMPLOYEE_MANAGE)) {
     return (
       <AppShell user={user} maxWidth="max-w-[700px]">
-        <p className="text-sm text-[var(--ink-2)]">Anda tidak memiliki akses ke halaman ini.</p>
+        <p className="text-body text-[var(--ink-2)]">Anda tidak memiliki akses ke halaman ini.</p>
       </AppShell>
     );
   }
@@ -30,13 +30,13 @@ export default async function EditKaryawanPage({ params }: { params: Promise<{ i
   return (
     <AppShell user={user} maxWidth="max-w-[700px]" className="space-y-6">
       <header className="space-y-2">
-        <Link href="/karyawan" className="text-[13px] text-[var(--ink-2)] hover:text-[var(--ink)]">
+        <Link href="/karyawan" className="text-caption text-[var(--ink-2)] hover:text-[var(--ink)]">
           &larr; Karyawan
         </Link>
-        <h1 className="text-[28px] font-semibold tracking-[-0.02em] text-[var(--ink)]">
+        <h1 className="text-display font-semibold tracking-[-0.02em] text-[var(--ink)]">
           {karyawan.fullName}
         </h1>
-        <p className="text-[15px] text-[var(--ink-2)]">
+        <p className="text-body text-[var(--ink-2)]">
           {karyawan.employeeCode} &middot;{" "}
           {karyawan.isActive ? "Aktif" : "Nonaktif — tidak masuk payroll berikutnya"}
         </p>
@@ -66,3 +66,4 @@ export default async function EditKaryawanPage({ params }: { params: Promise<{ i
     </AppShell>
   );
 }
+

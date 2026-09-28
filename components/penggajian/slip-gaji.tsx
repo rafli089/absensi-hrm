@@ -53,44 +53,44 @@ export function SlipGaji({
           <TombolCetak />
         </div>
 
-        <article className="rounded-[12px] border border-[var(--border)] bg-[var(--surface)] p-6 print:rounded-none print:border-0 print:bg-white print:p-0">
-          <header className="flex items-start justify-between gap-4 border-b border-[var(--border)] pb-4 print:border-[#999]">
+        <article className="rounded-[var(--radius-lg)] bg-[var(--surface)] p-6 shadow-[var(--shadow-sm)] print:rounded-none print:bg-white print:p-0 print:shadow-none">
+          <header className="flex items-start justify-between gap-4 border-b border-black/[0.08] pb-4 print:border-[#999]">
             <div>
-              <h1 className="text-[18px] font-semibold tracking-[-0.01em]">{kantor?.name ?? "Perusahaan"}</h1>
-              {kantor?.address && <p className="text-[12px] text-[var(--ink-2)]">{kantor.address}</p>}
+              <h1 className="text-h2 font-semibold tracking-[-0.01em]">{kantor?.name ?? "Perusahaan"}</h1>
+              {kantor?.address && <p className="text-label text-[var(--ink-2)]">{kantor.address}</p>}
             </div>
             <div className="text-right">
-              <p className="text-[13px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-2)]">Slip Gaji</p>
-              <p className="text-[12px] text-[var(--ink-2)]">Periode {bulan}</p>
-              <p className="font-mono text-[11px] text-[var(--ink-2)]">
+              <p className="text-h3 font-semibold text-[var(--ink-2)]">Slip gaji</p>
+              <p className="text-label text-[var(--ink-2)]">Periode {bulan}</p>
+              <p className="font-mono text-label text-[var(--ink-2)]">
                 {tgl(payroll.periodStart)} &ndash; {tgl(payroll.periodEnd)}
               </p>
             </div>
           </header>
 
-          <section className="grid grid-cols-2 gap-x-6 gap-y-2 border-b border-[var(--border)] py-4 text-[13px] print:border-[#999] sm:grid-cols-3">
+          <section className="grid grid-cols-2 gap-x-6 gap-y-2 border-b border-black/[0.08] py-4 text-caption print:border-[#999] sm:grid-cols-3">
             <div>
-              <p className="text-[11px] uppercase text-[var(--ink-2)]">Nama</p>
+              <p className="text-label text-[var(--ink-2)]">Nama</p>
               <p className="font-medium">{e.fullName}</p>
             </div>
             <div>
-              <p className="text-[11px] uppercase text-[var(--ink-2)]">Kode</p>
+              <p className="text-label text-[var(--ink-2)]">Kode</p>
               <p className="font-mono font-medium">{e.employeeCode}</p>
             </div>
             <div>
-              <p className="text-[11px] uppercase text-[var(--ink-2)]">Jabatan</p>
+              <p className="text-label text-[var(--ink-2)]">Jabatan</p>
               <p className="font-medium">{e.position?.name ?? "-"}</p>
             </div>
             <div>
-              <p className="text-[11px] uppercase text-[var(--ink-2)]">Departemen</p>
+              <p className="text-label text-[var(--ink-2)]">Departemen</p>
               <p className="font-medium">{e.department?.name ?? "-"}</p>
             </div>
             <div>
-              <p className="text-[11px] uppercase text-[var(--ink-2)]">Hari kerja</p>
+              <p className="text-label text-[var(--ink-2)]">Hari kerja</p>
               <p className="font-medium">{payroll.workDays}</p>
             </div>
             <div>
-              <p className="text-[11px] uppercase text-[var(--ink-2)]">Terlambat</p>
+              <p className="text-label text-[var(--ink-2)]">Terlambat</p>
               <p className="font-medium">
                 {payroll.lateMinutes} menit{payroll.absentDays > 0 ? ` · ${payroll.absentDays} alpa` : ""}
               </p>
@@ -98,30 +98,30 @@ export function SlipGaji({
           </section>
 
           <section className="py-4">
-            <h2 className="mb-2 text-[12px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-2)]">
+            <h2 className="mb-2 text-h3 font-semibold text-[var(--ink)]">
               Rincian
             </h2>
-            <table className="w-full text-[13px]">
+            <table className="w-full text-caption">
               <tbody>
-                <tr className="border-b border-[var(--border)] print:border-[#ccc]">
+                <tr className="border-b border-black/[0.08] print:border-[#ccc]">
                   <td className="py-1.5 font-medium">Gaji Pokok</td>
                   <td className="py-1.5 text-right font-mono">{rupiah(payroll.basicSalary)}</td>
                 </tr>
                 {payroll.items.map((it) => {
                   const n = Number(it.amount);
                   return (
-                    <tr key={it.id} className="border-b border-[var(--border)] print:border-[#eee]">
+                    <tr key={it.id} className="border-b border-black/[0.08] print:border-[#eee]">
                       <td className="py-1.5">
                         {it.name}
-                        {it.note && <span className="block text-[11px] text-[var(--ink-2)]">{it.note}</span>}
+                        {it.note && <span className="block text-label text-[var(--ink-2)]">{it.note}</span>}
                       </td>
-                      <td className={"py-1.5 text-right font-mono " + (n < 0 ? "text-[#b42318]" : "")}>{rupiah(n)}</td>
+                      <td className={"py-1.5 text-right font-mono " + (n < 0 ? "text-[var(--danger-ink)]" : "")}>{rupiah(n)}</td>
                     </tr>
                   );
                 })}
               </tbody>
               <tfoot>
-                <tr className="border-b border-[var(--border)] print:border-[#999]">
+                <tr className="border-b border-black/[0.08] print:border-[#999]">
                   <td className="py-1.5 font-medium">Total Pendapatan</td>
                   <td className="py-1.5 text-right font-mono font-medium">
                     {rupiah(
@@ -132,24 +132,24 @@ export function SlipGaji({
                     )}
                   </td>
                 </tr>
-                <tr className="border-b border-[var(--border)] print:border-[#999]">
+                <tr className="border-b border-black/[0.08] print:border-[#999]">
                   <td className="py-1.5 font-medium">Total Potongan</td>
-                  <td className="py-1.5 text-right font-mono font-medium text-[#b42318]">
+                  <td className="py-1.5 text-right font-mono font-medium text-[var(--danger-ink)]">
                     {rupiah("-" + (Number(payroll.totalDeduction) + Number(payroll.tax)))}
                   </td>
                 </tr>
                 <tr>
-                  <td className="py-2 text-[15px] font-semibold">Gaji Bersih (Take Home Pay)</td>
-                  <td className="py-2 text-right font-mono text-[15px] font-semibold">{rupiah(payroll.netSalary)}</td>
+                  <td className="py-2 text-h3 font-semibold">Gaji Bersih (Take Home Pay)</td>
+                  <td className="py-2 text-right font-mono text-h3 font-semibold">{rupiah(payroll.netSalary)}</td>
                 </tr>
               </tfoot>
             </table>
           </section>
 
-          <footer className="flex items-end justify-between gap-6 border-t border-[var(--border)] pt-4 text-[12px] print:border-[#999]">
+          <footer className="flex items-end justify-between gap-6 border-t border-black/[0.08] pt-4 text-label print:border-[#999]">
             {e.bankName || e.bankAccount ? (
               <div>
-                <p className="text-[11px] uppercase text-[var(--ink-2)]">Ditransfer ke</p>
+                <p className="text-label text-[var(--ink-2)]">Ditransfer ke</p>
                 <p className="font-medium">
                   {e.bankName ?? "-"} {e.bankAccount ?? ""}
                 </p>
@@ -162,7 +162,7 @@ export function SlipGaji({
               {payroll.approvedByName ? (
                 <>
                   <p className="mt-10 font-medium">{payroll.approvedByName}</p>
-                  <p className="text-[11px] text-[var(--ink-2)]">
+                  <p className="text-label text-[var(--ink-2)]">
                     Disetujui {tanggalPanjang(payroll.approvedAt ?? new Date().toISOString())}
                   </p>
                 </>

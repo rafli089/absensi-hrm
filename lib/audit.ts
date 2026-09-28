@@ -4,7 +4,7 @@
  */
 
 import { prisma } from "@/lib/db";
-import type { AuditAction, SecurityEventType, Severity } from "@prisma/client";
+import { Prisma, type AuditAction, type SecurityEventType, type Severity } from "@prisma/client";
 
 export type AuditInput = {
   userId?: string;
@@ -24,8 +24,8 @@ export async function audit(input: AuditInput): Promise<void> {
       action: input.action,
       entityType: input.entityType,
       entityId: input.entityId,
-      oldValue: input.oldValue !== undefined ? (input.oldValue as any) : undefined,
-      newValue: input.newValue !== undefined ? (input.newValue as any) : undefined,
+      oldValue: input.oldValue !== undefined ? (input.oldValue as Prisma.InputJsonValue) : undefined,
+      newValue: input.newValue !== undefined ? (input.newValue as Prisma.InputJsonValue) : undefined,
       ipAddress: input.ipAddress,
       userAgent: input.userAgent,
     },
@@ -55,7 +55,7 @@ export async function catatKeamanan(params: {
       latitude: params.latitude,
       longitude: params.longitude,
       description: params.description,
-      metadata: params.metadata ? (params.metadata as any) : undefined,
+      metadata: params.metadata ? (params.metadata as Prisma.InputJsonValue) : undefined,
     },
   });
 }

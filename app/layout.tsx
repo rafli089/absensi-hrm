@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#F5F5F7",
+  themeColor: "#f5f5f7",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -31,7 +31,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           toastOptions={{
             style: {
               borderRadius: "16px",
-              border: "1px solid #D2D2D7",
+              border: "1px solid rgba(0,0,0,0.08)",
               fontFamily: "inherit",
             },
           }}

@@ -123,26 +123,26 @@ export function AmbilFoto({
         )}
 
         {state === "MENYIAPKAN" && (
-          <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/50 text-sm font-medium text-white">
+          <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/50 text-body font-medium text-white">
             <Loader2 className="size-4 animate-spin" aria-hidden />
             Menyiapkan kamera...
           </div>
         )}
         {state === "GAGAL" && (
-          <div className="absolute inset-0 flex items-center justify-center bg-red-500/25 p-4">
-            <p className="rounded-full bg-red-500 px-4 py-2 text-center text-sm font-medium text-white">{pesan}</p>
+          <div className="absolute inset-0 flex items-center justify-center bg-black/45 p-4">
+            <p className="rounded-full bg-[var(--danger)] px-4 py-2 text-center text-body font-medium text-white">{pesan}</p>
           </div>
         )}
         {pratinjau && (
-          <div className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-2 bg-emerald-500/25 p-3 backdrop-blur-sm">
-            <span className="flex items-center gap-2 rounded-full bg-emerald-600 px-4 py-2 text-sm font-medium text-white">
+          <div className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-2 bg-black/35 p-3 backdrop-blur-sm">
+            <span className="flex items-center gap-2 rounded-full bg-[var(--ok)] px-4 py-2 text-body font-medium text-white">
               <Check className="size-4" aria-hidden /> Foto siap
             </span>
           </div>
         )}
       </div>
 
-      <p className="text-[13px] text-[var(--ink-2)]" role="status">
+      <p className="text-caption text-[var(--ink-2)]" role="status">
         {pratinjau ? "Foto akan dikirim bersama data absensi." : pesan}
       </p>
 
@@ -155,7 +155,7 @@ export function AmbilFoto({
                 stop();
                 onBatal();
               }}
-              className="inline-flex h-10 items-center gap-2 rounded-[10px] border border-[var(--border)] bg-[var(--surface)] px-4 text-sm text-[var(--ink)]"
+              className="inline-flex h-10 items-center gap-2 rounded-[var(--radius-md)] border border-black/[0.12] bg-[var(--surface)] px-4 text-body text-[var(--ink)] transition-colors hover:bg-[var(--bg)] active:scale-[0.98]"
             >
               <X className="size-4" aria-hidden /> Batal
             </button>
@@ -163,7 +163,7 @@ export function AmbilFoto({
               type="button"
               onClick={ambil}
               disabled={state !== "SIAP"}
-              className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-[10px] bg-[var(--brand)] px-4 text-sm font-medium text-white disabled:opacity-50"
+              className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-[var(--radius-md)] bg-[var(--brand-hover)] px-4 text-body font-medium text-white transition-colors hover:brightness-95 active:scale-[0.98] disabled:opacity-50"
             >
               <Camera className="size-4" aria-hidden /> Ambil Foto
             </button>
@@ -173,14 +173,14 @@ export function AmbilFoto({
             <button
               type="button"
               onClick={ulang}
-              className="inline-flex h-10 items-center gap-2 rounded-[10px] border border-[var(--border)] bg-[var(--surface)] px-4 text-sm text-[var(--ink)]"
+              className="inline-flex h-10 items-center gap-2 rounded-[var(--radius-md)] border border-black/[0.12] bg-[var(--surface)] px-4 text-body text-[var(--ink)] transition-colors hover:bg-[var(--bg)] active:scale-[0.98]"
             >
               <RotateCcw className="size-4" aria-hidden /> Ulangi
             </button>
             <button
               type="button"
               onClick={() => onSelesai({ foto: pratinjau, diambilPada: new Date().toISOString() })}
-              className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-[10px] bg-emerald-600 px-4 text-sm font-medium text-white"
+              className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-[var(--radius-md)] bg-[var(--ok)] px-4 text-body font-medium text-white transition-colors hover:brightness-95 active:scale-[0.98]"
             >
               <Check className="size-4" aria-hidden /> Pakai Foto Ini
             </button>

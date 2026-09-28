@@ -1,4 +1,4 @@
-import { getSessionUser, requireUser } from "@/lib/auth/session";
+import { requireUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 import { AppShell } from "@/components/app-shell";
 import { Card, CardContent } from "@/components/ui/card";
@@ -30,8 +30,8 @@ export default async function AbsensiHariIniPage() {
       <div className="space-y-6">
         {/* Header */}
         <header className="space-y-2">
-          <h1 className="text-[28px] font-semibold tracking-[-0.02em] text-[var(--ink)]">Absensi Hari Ini</h1>
-          <p className="text-[15px] text-[var(--ink-2)]">{formatTanggalPanjang(new Date())}</p>
+          <h1 className="text-display font-semibold tracking-[-0.02em] text-[var(--ink)]">Absensi Hari Ini</h1>
+          <p className="text-body text-[var(--ink-2)]">{formatTanggalPanjang(new Date())}</p>
         </header>
 
         {/* Status Card */}
@@ -39,7 +39,7 @@ export default async function AbsensiHariIniPage() {
           <CardContent className="pt-5 space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[13px] text-[var(--ink-2)]">Status</p>
+                <p className="text-caption text-[var(--ink-2)]">Status</p>
                 <div className="flex items-center gap-2">
                   {STATUS_ABSENSI[status] ? (
                     <Badge tone={STATUS_ABSENSI[status].tone}>{STATUS_ABSENSI[status].label}</Badge>
@@ -47,8 +47,8 @@ export default async function AbsensiHariIniPage() {
                     <Badge tone="neutral">Belum Absen</Badge>
                   )}
                   {sudahCheckIn && !sudahCheckOut && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
-                      <span className="relative inline-block size-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="inline-flex items-center gap-1 rounded-full bg-[var(--ok)]/15 px-2.5 py-0.5 text-label font-medium text-[var(--ok-ink)]">
+                      <span className="relative inline-block size-2 rounded-full bg-[var(--ok)] animate-pulse" />
                       Sedang Bekerja
                     </span>
                   )}
@@ -59,26 +59,26 @@ export default async function AbsensiHariIniPage() {
             {sudahCheckIn && (
               <div className="grid gap-4 sm:grid-cols-4 border-t border-[var(--border)] pt-4">
                 <div className="space-y-1">
-                  <p className="text-[13px] text-[var(--ink-2)]">Check-in</p>
-                  <p className="text-[22px] font-mono font-medium text-[var(--ink)]">{formatJam(attendance?.checkIn)}</p>
+                  <p className="text-caption text-[var(--ink-2)]">Check-in</p>
+                  <p className="text-time font-mono font-medium text-[var(--ink)]">{formatJam(attendance?.checkIn)}</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-[13px] text-[var(--ink-2)]">Check-out</p>
-                  <p className="text-[22px] font-mono font-medium text-[var(--ink)]">{formatJam(attendance?.checkOut)}</p>
+                  <p className="text-caption text-[var(--ink-2)]">Check-out</p>
+                  <p className="text-time font-mono font-medium text-[var(--ink)]">{formatJam(attendance?.checkOut)}</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-[13px] text-[var(--ink-2)]">Durasi</p>
-                  <p className="text-[22px] font-mono font-medium text-[var(--ink)]">{formatMenit(attendance?.workMinutes ?? 0)}</p>
+                  <p className="text-caption text-[var(--ink-2)]">Durasi</p>
+                  <p className="text-time font-mono font-medium text-[var(--ink)]">{formatMenit(attendance?.workMinutes ?? 0)}</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-[13px] text-[var(--ink-2)]">Lembur</p>
-                  <p className="text-[22px] font-mono font-medium text-[var(--ink)]">{formatMenit(attendance?.overtimeMinutes ?? 0)}</p>
+                  <p className="text-caption text-[var(--ink-2)]">Lembur</p>
+                  <p className="text-time font-mono font-medium text-[var(--ink)]">{formatMenit(attendance?.overtimeMinutes ?? 0)}</p>
                 </div>
               </div>
             )}
 
             {sudahCheckIn && attendance?.distanceFromOffice && (
-              <div className="flex items-center gap-2 text-sm text-[var(--ink-2)] border-t border-[var(--border)] pt-4">
+              <div className="flex items-center gap-2 text-body text-[var(--ink-2)] border-t border-[var(--border)] pt-4">
                 <MapPin className="size-4" />
                 <span>Jarak dari kantor: {Math.round(attendance.distanceFromOffice)} m</span>
                 <Badge tone={attendance.distanceFromOffice <= 150 ? "success" : "warning"}>
@@ -92,9 +92,9 @@ export default async function AbsensiHariIniPage() {
         {/* Shift Info */}
         <Card>
           <CardContent className="pt-5 space-y-3">
-            <h3 className="text-[15px] font-semibold">Shift Hari Ini</h3>
+            <h3 className="text-h3 font-semibold">Shift Hari Ini</h3>
             {shiftToday ? (
-              <div className="grid gap-3 sm:grid-cols-4 text-sm">
+              <div className="grid gap-3 sm:grid-cols-4 text-body">
                 <div className="space-y-1">
                   <p className="text-[var(--ink-2)]">Masuk</p>
                   <p className="font-mono font-medium">{shiftToday.shift.startTime}</p>
@@ -132,9 +132,9 @@ export default async function AbsensiHariIniPage() {
           ) : (
             <Card>
               <CardContent className="pt-5 text-center">
-                <CheckCircle className="size-12 mx-auto mb-2 text-emerald-500" />
-                <p className="text-[17px] font-semibold text-[var(--ink)]">Absensi Lengkap</p>
-                <p className="text-sm text-[var(--ink-2)]">Check-in: {formatJam(attendance?.checkIn)} · Check-out: {formatJam(attendance?.checkOut)}</p>
+                <CheckCircle className="size-12 mx-auto mb-2 text-[var(--ok-ink)]" />
+                <p className="text-h2 font-semibold text-[var(--ink)]">Absensi Lengkap</p>
+                <p className="text-body text-[var(--ink-2)]">Check-in: {formatJam(attendance?.checkIn)} · Check-out: {formatJam(attendance?.checkOut)}</p>
                 <div className="mt-4 flex gap-3 justify-center">
                   <Link href="/absensi/riwayat"><Button variant="secondary">Lihat Riwayat</Button></Link>
                 </div>
@@ -144,7 +144,7 @@ export default async function AbsensiHariIniPage() {
         </div>
 
         {/* Catatan */}
-        <div className="rounded-[12px] border border-[var(--border)] bg-[var(--surface)] p-4 text-sm text-[var(--ink-2)]">
+        <div className="rounded-[var(--radius-lg)] bg-[var(--surface)] p-4 text-body text-[var(--ink-2)] shadow-[var(--shadow-sm)]">
           <ul className="space-y-2 list-disc list-inside">
             <li>Foto di lokasi wajib (PRD §25).</li>
             <li>Check-in setelah toleransi = Terlambat.</li>

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Loader2, UserPlus, Save } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input, Label } from "@/components/ui/input";
+import { Input, Select, Label } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 type Opsi = { id: string; name: string };
@@ -35,10 +35,6 @@ const STATUS = [
   { value: "INTERN", label: "Magang" },
   { value: "FREELANCE", label: "Freelance" },
 ] as const;
-
-const kelasInput =
-  "h-9 w-full rounded-[10px] border border-[var(--border)] bg-[var(--surface)] px-3 text-sm text-[var(--ink)] outline-none placeholder:text-[var(--ink-2)]/60 focus:border-[var(--brand)] focus:ring-2 focus:ring-[var(--brand)]/20";
-
 const tanggal = (iso: Date) => iso.toISOString().slice(0, 10);
 
 export function FormKaryawan({
@@ -106,7 +102,7 @@ export function FormKaryawan({
             ) : (
               <UserPlus className="size-5 text-[var(--brand)]" aria-hidden />
             )}
-            <h2 className="text-[15px] font-semibold">Data karyawan</h2>
+            <h2 className="text-h3 font-semibold">Data karyawan</h2>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-[140px_1fr]">
@@ -115,7 +111,6 @@ export function FormKaryawan({
               <Input
                 name="employeeCode"
                 defaultValue={awal?.employeeCode ?? kodeBerikutnya}
-                className={kelasInput}
                 required
               />
             </Label>
@@ -125,7 +120,6 @@ export function FormKaryawan({
                 name="fullName"
                 defaultValue={awal?.fullName}
                 placeholder="Budi Santoso"
-                className={kelasInput}
                 required
               />
             </Label>
@@ -139,7 +133,6 @@ export function FormKaryawan({
                 type="email"
                 defaultValue={awal?.email ?? ""}
                 placeholder="budi@kantor.id"
-                className={kelasInput}
               />
             </Label>
             <Label className="block space-y-1.5">
@@ -150,7 +143,6 @@ export function FormKaryawan({
                 maxLength={16}
                 defaultValue={awal?.nik ?? ""}
                 placeholder="3201234567890001"
-                className={kelasInput}
               />
             </Label>
           </div>
@@ -163,7 +155,6 @@ export function FormKaryawan({
                 inputMode="tel"
                 defaultValue={awal?.phone ?? ""}
                 placeholder="08123456789"
-                className={kelasInput}
               />
             </Label>
             <Label className="block space-y-1.5">
@@ -172,7 +163,6 @@ export function FormKaryawan({
                 name="joinDate"
                 type="date"
                 defaultValue={awal ? tanggal(new Date(awal.joinDate)) : ""}
-                className={kelasInput}
                 required
               />
             </Label>
@@ -182,7 +172,6 @@ export function FormKaryawan({
                 name="employmentEndDate"
                 type="date"
                 defaultValue={awal?.resignDate ? tanggal(new Date(awal.resignDate)) : ""}
-                className={kelasInput}
               />
             </Label>
           </div>
@@ -190,10 +179,9 @@ export function FormKaryawan({
           <div className="grid gap-3 sm:grid-cols-3">
             <Label className="block space-y-1.5">
               <span>Departemen</span>
-              <select
+              <Select
                 name="departmentId"
                 defaultValue={awal?.departmentId ?? ""}
-                className={kelasInput}
               >
                 <option value="">— belum —</option>
                 {departemen.map((d) => (
@@ -201,41 +189,40 @@ export function FormKaryawan({
                     {d.name}
                   </option>
                 ))}
-              </select>
+              </Select>
             </Label>
             <Label className="block space-y-1.5">
               <span>Jabatan</span>
-              <select name="positionId" defaultValue={awal?.positionId ?? ""} className={kelasInput}>
+              <Select name="positionId" defaultValue={awal?.positionId ?? ""}>
                 <option value="">— belum —</option>
                 {jabatan.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}
                   </option>
                 ))}
-              </select>
+              </Select>
             </Label>
             <Label className="block space-y-1.5">
               <span>Status kerja</span>
-              <select
+              <Select
                 name="employmentStatus"
                 defaultValue={awal?.employmentStatus ?? "PERMANENT"}
-                className={kelasInput}
               >
                 {STATUS.map((s) => (
                   <option key={s.value} value={s.value}>
                     {s.label}
                   </option>
                 ))}
-              </select>
+              </Select>
             </Label>
           </div>
 
-          <fieldset className="space-y-3 rounded-[12px] border border-[var(--border)] p-4">
-            <legend className="px-1 text-[12px] text-[var(--ink-2)]">Data gaji (opsional, bisa diisi nanti)</legend>
+          <fieldset className="space-y-3 rounded-[var(--radius-lg)] bg-[var(--surface)] p-4 shadow-[var(--shadow-sm)]">
+            <legend className="px-1 text-label text-[var(--ink-2)]">Data gaji (opsional, bisa diisi nanti)</legend>
             <div className="grid gap-3 sm:grid-cols-3">
               <Label className="block space-y-1.5">
                 <span>Bank</span>
-                <Input name="bankName" defaultValue={awal?.bankName ?? ""} placeholder="BCA" className={kelasInput} />
+                <Input name="bankName" defaultValue={awal?.bankName ?? ""} placeholder="BCA" />
               </Label>
               <Label className="block space-y-1.5">
                 <span>Nomor rekening</span>
@@ -243,12 +230,11 @@ export function FormKaryawan({
                   name="bankAccount"
                   inputMode="numeric"
                   defaultValue={awal?.bankAccount ?? ""}
-                  className={kelasInput}
                 />
               </Label>
               <Label className="block space-y-1.5">
                 <span>NPWP</span>
-                <Input name="taxNumber" inputMode="numeric" defaultValue={awal?.taxNumber ?? ""} className={kelasInput} />
+                <Input name="taxNumber" inputMode="numeric" defaultValue={awal?.taxNumber ?? ""} />
               </Label>
             </div>
           </fieldset>

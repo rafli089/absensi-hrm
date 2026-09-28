@@ -8,7 +8,7 @@ export async function middleware(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
   const token = req.cookies.get("absensi_session")?.value;
 
-  const PUBLIK = ["/login", "/api/auth/login", "/api/auth/logout"];
+  const PUBLIK = ["/login", "/api/auth/login", "/api/auth/logout", "/api/health"];
   const sudahLogin = Boolean(token);
 
   if (!sudahLogin && !PUBLIK.some((p) => pathname.startsWith(p))) {

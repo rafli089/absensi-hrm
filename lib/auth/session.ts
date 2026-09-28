@@ -31,6 +31,7 @@ function secret(): string {
 }
 
 export async function createSession(userId: string, meta: { deviceId?: string; deviceLabel?: string }): Promise<string> {
+  secret(); // fail-fast: SESSION_SECRET harus valid sebelum bikin session
   const token = randomBytes(32).toString("hex");
   const h = await headers();
   const expiresAt = new Date(Date.now() + MAX_AGE * 1000);

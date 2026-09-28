@@ -63,33 +63,33 @@ export function KartuAbsen({ mode }: { mode: "check-in" | "check-out" }) {
 
   const biru = mode === "check-in";
   return (
-    <div className={`rounded-[20px] border p-5 ${biru ? "border-[var(--brand)] bg-[var(--surface)]" : "border-emerald-200 bg-emerald-50"}`}>
+    <div className={`rounded-[var(--radius-lg)] bg-[var(--surface)] shadow-[var(--shadow-sm)] p-5`}>
       <div className="space-y-4">
-        <div className={`text-center ${biru ? "text-[var(--ink)]" : "text-emerald-700"}`}>
+        <div className={`text-center ${biru ? "text-[var(--ink)]" : "text-[var(--ok-ink)]"}`}>
           {biru ? (
             <>
               <CheckCircle className="mx-auto mb-2 size-12 text-[var(--brand)]" aria-hidden />
-              <p className="text-[17px] font-medium">Siap untuk Check-in?</p>
-              <p className="text-sm text-[var(--ink-2)]">Ambil foto di lokasi &amp; pastikan GPS aktif.</p>
+              <p className="text-h2 font-medium">Siap untuk Check-in?</p>
+              <p className="text-body text-[var(--ink-2)]">Ambil foto di lokasi &amp; pastikan GPS aktif.</p>
             </>
           ) : (
             <>
               <Clock className="mx-auto mb-2 size-12" aria-hidden />
-              <p className="text-[17px] font-medium">Sedang Bekerja</p>
-              <p className="text-sm opacity-90">Check-out untuk mengakhiri shift.</p>
+              <p className="text-h2 font-medium">Sedang Bekerja</p>
+              <p className="text-body opacity-90">Check-out untuk mengakhiri shift.</p>
             </>
           )}
         </div>
 
         {memproses && (
-          <div className="flex items-center justify-center gap-2 rounded-[10px] bg-black/[0.04] px-3 py-2 text-[13px] text-[var(--ink-2)]" role="status">
+          <div className="flex items-center justify-center gap-2 rounded-[var(--radius-md)] bg-black/[0.04] px-3 py-2 text-body text-[var(--ink-2)]" role="status">
             <Loader2 className="size-4 animate-spin" aria-hidden />
             Mengirim foto dan lokasi...
           </div>
         )}
 
         {statusLokasi && (
-          <div className={`flex items-center gap-2 rounded-[10px] px-3 py-2 text-[12px] ${statusLokasi.ok ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}>
+          <div className={`flex items-center gap-2 rounded-[var(--radius-md)] px-3 py-2 text-label ${statusLokasi.ok ? "bg-[var(--ok)]/15 text-[var(--ok-ink)]" : "bg-[var(--danger)]/15 text-[var(--danger-ink)]"}`}>
             <MapPin className="size-3.5" aria-hidden />
             {statusLokasi.teks}
           </div>

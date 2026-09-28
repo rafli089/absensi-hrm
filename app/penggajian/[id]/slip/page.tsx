@@ -44,7 +44,7 @@ export default async function SlipGajiPage({ params }: { params: Promise<{ id: s
   // slip gaji memuat nomor rekening.
   const milikSendiri = user.employeeId === payroll.employeeId;
   if (!milikSendiri && !can(user.role, PERMISSIONS.PAYROLL_MANAGE)) {
-    return <p className="p-8 text-sm text-[var(--ink-2)]">Anda tidak memiliki akses ke slip gaji ini.</p>;
+    return <p className="p-8 text-body text-[var(--ink-2)]">Anda tidak memiliki akses ke slip gaji ini.</p>;
   }
 
   const kantor = await prisma.office.findFirst({ where: { isActive: true }, select: { name: true, address: true } });

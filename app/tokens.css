@@ -3,11 +3,54 @@
   --surface: #ffffff;
   --ink: #1d1d1f;
   --ink-2: #6e6e73;
-  --border: #d2d2d7;
-  --brand: #0071e3;
-  --ok: #1a7f37;
-  --warn: #b54708;
-  --danger: #cf1a1a;
-  --info: #175cd3;
-  --radius-card: 20px;
+  --border: #8e8e93;
+  --brand: #007aff;
+  --brand-hover: #0066d4;
+  --ok: #34c759;
+  --warn: #ff9500;
+  --danger: #ff3b30;
+  --info: #007aff;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+  --sidebar-active: #ebebef;
+  /* Varian gelap untuk teks di atas tint. Warna sistem Apple terlalu terang
+     untuk teks kecil (kontras < 4.5:1), jadi label status pakai ini. */
+  --ok-ink: #1c7c3a;
+  --warn-ink: #9a5b00;
+  --danger-ink: #c11f18;
+  --info-ink: #0059b3;
+  /* systemBlue hanya 4.02:1 di atas putih — gagal AA untuk teks normal.
+     Dipakai untuk link dan tombol varian `link`; fill tombol tetap --brand. */
+  --brand-ink: #0066cc;
+}
+
+/* Konsumen memakai bentuk arbitrer (rounded-[var(--radius-md)]), bukan kelas
+   .radius-*, jadi tidak ada layer utility di sini. */
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--ink-2); }
+
+/* Focus ring — Apple style: soft glow (README2 §Tipografi "3px ring brand") */
+*:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--brand), 0 0 0 5px rgba(0, 102, 204, 0.18);
+}
+
+/* Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

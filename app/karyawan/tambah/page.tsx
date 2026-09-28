@@ -12,7 +12,7 @@ export default async function TambahKaryawanPage() {
   if (!can(user.role, PERMISSIONS.EMPLOYEE_MANAGE)) {
     return (
       <AppShell user={user} maxWidth="max-w-[700px]">
-        <p className="text-sm text-[var(--ink-2)]">Anda tidak memiliki akses ke halaman ini.</p>
+        <p className="text-body text-[var(--ink-2)]">Anda tidak memiliki akses ke halaman ini.</p>
       </AppShell>
     );
   }
@@ -30,11 +30,11 @@ export default async function TambahKaryawanPage() {
   return (
     <AppShell user={user} maxWidth="max-w-[700px]" className="space-y-6">
       <header className="space-y-2">
-        <Link href="/karyawan" className="text-[13px] text-[var(--ink-2)] hover:text-[var(--ink)]">
+        <Link href="/karyawan" className="text-caption text-[var(--ink-2)] hover:text-[var(--ink)]">
           &larr; Karyawan
         </Link>
-        <h1 className="text-[28px] font-semibold tracking-[-0.02em] text-[var(--ink)]">Tambah Karyawan</h1>
-        <p className="text-[15px] text-[var(--ink-2)]">
+        <h1 className="text-display font-semibold tracking-[-0.02em] text-[var(--ink)]">Tambah Karyawan</h1>
+        <p className="text-body text-[var(--ink-2)]">
           Data gaji boleh diisi nanti, tapi departemen dan jabatan memudahkan filter riwayat.
         </p>
       </header>

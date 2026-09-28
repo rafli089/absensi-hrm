@@ -12,7 +12,7 @@ export default async function PengaturanKantorPage() {
   if (!STAFF_ROLES.includes(user.role)) {
     return (
       <AppShell user={user} maxWidth="max-w-[700px]">
-        <p className="text-sm text-[var(--ink-2)]">Hanya atasan/HR/admin yang boleh mengubah lokasi kantor.</p>
+        <p className="text-body text-[var(--ink-2)]">Hanya atasan/HR/admin yang boleh mengubah lokasi kantor.</p>
       </AppShell>
     );
   }
@@ -20,8 +20,8 @@ export default async function PengaturanKantorPage() {
   return (
     <AppShell user={user} maxWidth="max-w-[700px]" className="space-y-6">
       <header className="space-y-2">
-        <h1 className="text-[28px] font-semibold tracking-[-0.02em] text-[var(--ink)]">Pengaturan Kantor</h1>
-        <p className="text-[15px] text-[var(--ink-2)]">Koordinat &amp; radius untuk validasi GPS absensi</p>
+        <h1 className="text-display font-semibold tracking-[-0.02em] text-[var(--ink)]">Pengaturan Kantor</h1>
+        <p className="text-body text-[var(--ink-2)]">Koordinat &amp; radius untuk validasi GPS absensi</p>
       </header>
 
       <Card>
@@ -30,7 +30,7 @@ export default async function PengaturanKantorPage() {
         </CardContent>
       </Card>
 
-      <div className="space-y-2 rounded-[12px] border border-[var(--border)] bg-[var(--surface)] p-4 text-sm text-[var(--ink-2)]">
+      <div className="space-y-2 rounded-[var(--radius-lg)] bg-[var(--surface)] p-4 text-body text-[var(--ink-2)] shadow-[var(--shadow-sm)]">
         <p className="font-medium text-[var(--ink)]">Catatan GPS</p>
         <ul className="list-inside list-disc space-y-2">
           <li>GPS harus aktif di browser/HP (izin lokasi).</li>

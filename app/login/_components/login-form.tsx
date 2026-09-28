@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { FIELD } from "@/components/ui/input";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "motion/react";
 import { LogIn } from "lucide-react";
@@ -8,7 +9,10 @@ import { LogIn } from "lucide-react";
 export function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
-  const next = params.get("next") ?? "/dashboard";
+  // Hanya path same-origin. Tanpa ini `?next=//evil.tld` jadi open redirect
+  // post-login (phishing), karena router.push menghormati URL absolut.
+  const raw = params.get("next");
+  const next = raw && /^\/(?![/\\])/.test(raw) ? raw : "/dashboard";
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,19 +47,19 @@ export function LoginForm() {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="w-full max-w-sm space-y-6 rounded-[20px] border border-[var(--border)] bg-[var(--surface)] p-8 shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
+      className="w-full max-w-sm space-y-6 rounded-[var(--radius-xl)] bg-[var(--surface)] p-8 shadow-[var(--shadow-md)]"
     >
       <div className="space-y-2 text-center">
         <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-[var(--brand)] text-white shadow-lg">
           <LogIn className="size-7" aria-hidden />
         </div>
-        <h1 className="text-[22px] font-semibold tracking-[-0.02em] text-[var(--ink)]">Absensi & HR</h1>
-        <p className="text-[13px] text-[var(--ink-2)]">Masuk untuk mengelola absensi karyawan</p>
+        <h1 className="text-h1 font-semibold tracking-[-0.02em] text-[var(--ink)]">Absensi & HR</h1>
+        <p className="text-caption text-[var(--ink-2)]">Masuk untuk mengelola absensi karyawan</p>
       </div>
 
       <form onSubmit={submit} className="space-y-4">
         <label className="block space-y-1.5">
-          <span className="text-[13px] font-medium text-[var(--ink)]">Email</span>
+          <span className="text-caption font-medium text-[var(--ink)]">Email</span>
           <input
             id="email"
             type="email"
@@ -63,13 +67,13 @@ export function LoginForm() {
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="flex h-9 w-full rounded-[10px] border border-[var(--border)] bg-[var(--surface)] px-3 text-sm text-[var(--ink)] outline-none transition-colors placeholder:text-[var(--ink-2)]/60 focus:border-[var(--brand)] focus:ring-2 focus:ring-[var(--brand)]/20"
+            className={FIELD}
             placeholder="sari@kantor.id"
           />
         </label>
 
         <label className="block space-y-1.5">
-          <span className="text-[13px] font-medium text-[var(--ink)]">Kata Sandi</span>
+          <span className="text-caption font-medium text-[var(--ink)]">Kata Sandi</span>
           <input
             id="password"
             type="password"
@@ -77,13 +81,13 @@ export function LoginForm() {
             autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="flex h-9 w-full rounded-[10px] border border-[var(--border)] bg-[var(--surface)] px-3 text-sm text-[var(--ink)] outline-none transition-colors focus:border-[var(--brand)] focus:ring-2 focus:ring-[var(--brand)]/20"
+            className={FIELD}
             placeholder="••••••••"
           />
         </label>
 
         {error && (
-          <div role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+          <div role="alert" className="rounded-[var(--radius-md)] bg-[var(--danger)]/15 px-3 py-2 text-xs text-[var(--danger-ink)]">
             {error}
           </div>
         )}
@@ -91,7 +95,7 @@ export function LoginForm() {
         <button
           type="submit"
           disabled={loading}
-          className="inline-flex w-full items-center justify-center rounded-[10px] bg-[var(--brand)] py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-[#0077ed] disabled:opacity-50"
+          className="inline-flex w-full items-center justify-center rounded-[var(--radius-md)] bg-[var(--brand-hover)] py-2.5 text-body font-medium text-white transition-all duration-200 hover:brightness-95 active:scale-[0.98] disabled:opacity-50"
         >
           {loading ? (
             <span className="inline-block size-4 animate-spin rounded-full border-2 border-white/30 border-t-white" aria-label="Memuat" />
@@ -101,7 +105,7 @@ export function LoginForm() {
         </button>
       </form>
 
-      <p className="text-center text-[11px] text-[var(--ink-2)]">
+      <p className="text-center text-label text-[var(--ink-2)]">
         Semua akun demo memakai kata sandi <strong>password123</strong>
       </p>
     </motion.div>

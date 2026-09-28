@@ -1,4 +1,3 @@
-import { prisma } from "@/lib/db";
 import { requireApiPermission, clientIp } from "@/lib/auth/session";
 import { PERMISSIONS } from "@/lib/auth/permissions";
 import { headers } from "next/headers";

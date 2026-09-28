@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { ConflictError, toResponse } from "@/lib/error";
 import { requireApiPermission, clientIp } from "@/lib/auth/session";
 import { PERMISSIONS } from "@/lib/auth/permissions";
 import { headers } from "next/headers";
@@ -35,7 +36,7 @@ export async function POST(req: Request) {
     return Response.json({ ok: true, karyawan }, { status: 201 });
   } catch (e) {
     const bentrok = pesanBentrok(e);
-    if (bentrok) return Response.json({ error: bentrok }, { status: 409 });
-    throw e;
+    if (bentrok) return toResponse(new ConflictError("Karyawan", bentrok));
+    return toResponse(e);
   }
 }

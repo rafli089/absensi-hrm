@@ -91,7 +91,7 @@ export function FormKantor() {
 
   if (memuat) {
     return (
-      <div className="flex items-center justify-center gap-2 py-8 text-sm text-[var(--ink-2)]" role="status">
+      <div className="flex items-center justify-center gap-2 py-8 text-body text-[var(--ink-2)]" role="status">
         <Loader2 className="size-4 animate-spin" aria-hidden /> Memuat...
       </div>
     );
@@ -102,7 +102,7 @@ export function FormKantor() {
       <CardContent className="space-y-4 pt-5">
         <div className="flex items-center gap-2">
           <Building2 className="size-5 text-[var(--brand)]" aria-hidden />
-          <h2 className="text-[15px] font-semibold">Lokasi & Radius Kantor</h2>
+          <h2 className="text-h3 font-semibold">Lokasi & Radius Kantor</h2>
         </div>
 
         <form onSubmit={simpan} className="space-y-4">
@@ -143,7 +143,7 @@ export function FormKantor() {
         </form>
 
         {kantor && (
-          <p className="text-[12px] text-[var(--ink-2)]">
+          <p className="text-label text-[var(--ink-2)]">
             Saat ini: {kantor.latitude}, {kantor.longitude} · radius {Math.round(kantor.radius)}m
           </p>
         )}

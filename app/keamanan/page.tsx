@@ -14,7 +14,7 @@ export default async function KeamananPage() {
   if (!can(user.role, PERMISSIONS.SECURITY_VIEW)) {
     return (
       <AppShell user={user} maxWidth="max-w-[1100px]">
-        <p className="text-sm text-[var(--ink-2)]">Anda tidak memiliki akses ke halaman ini.</p>
+        <p className="text-body text-[var(--ink-2)]">Anda tidak memiliki akses ke halaman ini.</p>
       </AppShell>
     );
   }
@@ -32,8 +32,8 @@ export default async function KeamananPage() {
   return (
     <AppShell user={user} maxWidth="max-w-[1100px]" className="space-y-6">
       <header>
-        <h1 className="text-[28px] font-semibold tracking-[-0.02em] text-[var(--ink)]">Keamanan</h1>
-        <p className="text-[15px] text-[var(--ink-2)]">
+        <h1 className="text-display font-semibold tracking-[-0.02em] text-[var(--ink)]">Keamanan</h1>
+        <p className="text-body text-[var(--ink-2)]">
           {belum > 0 ? `${belum} peristiwa belum ditangani` : "Tidak ada peristiwa yang belum ditangani"}
         </p>
       </header>
@@ -43,7 +43,7 @@ export default async function KeamananPage() {
           {events.length === 0 ? (
             <div className="flex flex-col items-center gap-2 py-8 text-center">
               <ShieldAlert className="size-10 text-[var(--ink-2)]/40" aria-hidden />
-              <p className="text-[13px] text-[var(--ink-2)]">Belum ada peristiwa keamanan.</p>
+              <p className="text-caption text-[var(--ink-2)]">Belum ada peristiwa keamanan.</p>
             </div>
           ) : (
             <Table>
@@ -68,7 +68,7 @@ export default async function KeamananPage() {
                         minute: "2-digit",
                       })}
                     </TableCell>
-                    <TableCell className="whitespace-nowrap font-mono text-[12px]">{e.eventType}</TableCell>
+                    <TableCell className="whitespace-nowrap font-mono text-label">{e.eventType}</TableCell>
                     <TableCell>
                       <Badge tone={e.severity === "CRITICAL" ? "danger" : e.severity === "HIGH" ? "danger" : e.severity === "MEDIUM" ? "warning" : "neutral"}>
                         {e.severity}

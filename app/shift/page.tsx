@@ -15,7 +15,7 @@ export default async function ShiftPage() {
   if (!can(user.role, PERMISSIONS.SHIFT_MANAGE)) {
     return (
       <AppShell user={user} maxWidth="max-w-[1100px]">
-        <p className="text-sm text-[var(--ink-2)]">Anda tidak memiliki akses ke halaman ini.</p>
+        <p className="text-body text-[var(--ink-2)]">Anda tidak memiliki akses ke halaman ini.</p>
       </AppShell>
     );
   }
@@ -35,8 +35,8 @@ export default async function ShiftPage() {
   return (
     <AppShell user={user} maxWidth="max-w-[1100px]" className="space-y-6">
       <header>
-        <h1 className="text-[28px] font-semibold tracking-[-0.02em] text-[var(--ink)]">Shift</h1>
-        <p className="text-[15px] text-[var(--ink-2)]">{shifts.length} shift terdaftar</p>
+        <h1 className="text-display font-semibold tracking-[-0.02em] text-[var(--ink)]">Shift</h1>
+        <p className="text-body text-[var(--ink-2)]">{shifts.length} shift terdaftar</p>
       </header>
 
       <AssignShift
@@ -50,7 +50,7 @@ export default async function ShiftPage() {
           {shifts.length === 0 ? (
             <div className="flex flex-col items-center gap-2 py-8 text-center">
               <Calendar className="size-10 text-[var(--ink-2)]/40" aria-hidden />
-              <p className="text-[13px] text-[var(--ink-2)]">Belum ada data shift.</p>
+              <p className="text-caption text-[var(--ink-2)]">Belum ada data shift.</p>
             </div>
           ) : (
             <Table>
@@ -95,3 +95,4 @@ export default async function ShiftPage() {
     </AppShell>
   );
 }
+

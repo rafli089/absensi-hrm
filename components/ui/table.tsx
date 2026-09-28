@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 export const Table = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableElement>>(
   ({ className, ...props }, ref) => (
     <div className="w-full overflow-x-auto">
-      <table ref={ref} className={cn("w-full caption-bottom text-sm", className)} {...props} />
+      <table ref={ref} className={cn("w-full caption-bottom text-body", className)} {...props} />
     </div>
   ),
 );
@@ -26,7 +26,7 @@ export const TableRow = React.forwardRef<HTMLTableRowElement, React.HTMLAttribut
   ({ className, ...props }, ref) => (
     <tr
       ref={ref}
-      className={cn("border-b border-[var(--border)]/60 transition-colors hover:bg-black/[0.02]", className)}
+      className={cn("border-b border-black/[0.07] transition-colors hover:bg-black/[0.02]", className)}
       {...props}
     />
   ),
@@ -38,7 +38,7 @@ export const TableHead = React.forwardRef<HTMLTableCellElement, React.ThHTMLAttr
     <th
       ref={ref}
       className={cn(
-        "h-10 whitespace-nowrap px-4 text-left align-middle text-[12px] font-medium uppercase tracking-wide text-[var(--ink-2)]",
+        "h-10 whitespace-nowrap px-4 text-left align-middle text-caption font-medium text-[var(--ink-2)]",
         className,
       )}
       {...props}
@@ -56,7 +56,7 @@ TableCell.displayName = "TableCell";
 
 export const TableCaption = React.forwardRef<HTMLTableCaptionElement, React.HTMLAttributes<HTMLTableCaptionElement>>(
   ({ className, ...props }, ref) => (
-    <caption ref={ref} className={cn("mt-4 text-[13px] text-[var(--ink-2)]", className)} {...props} />
+    <caption ref={ref} className={cn("mt-4 text-caption text-[var(--ink-2)]", className)} {...props} />
   ),
 );
 TableCaption.displayName = "TableCaption";

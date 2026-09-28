@@ -35,8 +35,8 @@ export function Sidebar({ user }: { user: SessionUser }) {
   const items = menuFor(user.role);
 
   return (
-    <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col gap-4 overflow-y-auto border-r border-[var(--border)] bg-[var(--surface)] p-4 lg:flex">
-      <Link href="/dashboard" className="px-3 py-1.5 text-[15px] font-semibold tracking-[-0.02em] text-[var(--ink)]">
+    <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col gap-4 overflow-y-auto border-r border-black/[0.08] bg-[color-mix(in_srgb,var(--surface)_90%,white)] backdrop-blur-[20px] p-4 lg:flex">
+      <Link href="/dashboard" className="px-3 py-1.5 text-h3 font-semibold tracking-[-0.02em] text-[var(--ink)]">
         Absensi
       </Link>
 
@@ -47,10 +47,10 @@ export function Sidebar({ user }: { user: SessionUser }) {
             href={href}
             aria-current={isActive(pathname, href) ? "page" : undefined}
             className={cn(
-              "flex items-center gap-3 rounded-[10px] px-3 py-2 text-sm transition-colors",
+              "flex items-center gap-3 rounded-[var(--radius-md)] px-3 py-2 text-body transition-colors duration-150",
               isActive(pathname, href)
-                ? "bg-[var(--bg)] font-medium text-[var(--ink)]"
-                : "text-[var(--ink-2)] hover:bg-[var(--bg)] hover:text-[var(--ink)]",
+                ? "bg-[var(--sidebar-active)] font-medium text-[var(--ink)]"
+                : "text-[var(--ink-2)] hover:bg-[var(--bg)]/30 hover:text-[var(--ink)]",
             )}
           >
             <Icon className="size-4 shrink-0" aria-hidden />
@@ -60,8 +60,8 @@ export function Sidebar({ user }: { user: SessionUser }) {
       </nav>
 
       <div className="border-t border-[var(--border)] pt-3">
-        <p className="truncate px-3 text-[13px] font-medium text-[var(--ink)]">{user.fullName}</p>
-        <p className="px-3 text-[11px] text-[var(--ink-2)]">{ROLE_LABEL[user.role]}</p>
+        <p className="truncate px-3 text-caption font-medium text-[var(--ink)]">{user.fullName}</p>
+        <p className="px-3 text-label text-[var(--ink-2)]">{ROLE_LABEL[user.role]}</p>
         <Keluar />
       </div>
     </aside>
@@ -74,30 +74,37 @@ export function MobileHeader({ user }: { user: SessionUser }) {
   const items = menuFor(user.role);
 
   return (
-    <header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 lg:hidden">
+    <header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-black/[0.08] bg-[color-mix(in_srgb,var(--surface)_90%,white)] backdrop-blur-[20px] px-4 py-2.5 lg:hidden">
       <div className="min-w-0">
-        <p className="truncate text-[13px] font-medium text-[var(--ink)]">{user.fullName}</p>
-        <p className="text-[11px] text-[var(--ink-2)]">{ROLE_LABEL[user.role]}</p>
+        <p className="truncate text-caption font-medium text-[var(--ink)]">{user.fullName}</p>
+        <p className="text-label text-[var(--ink-2)]">{ROLE_LABEL[user.role]}</p>
       </div>
       <nav className="flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto">
         <div className="flex shrink-0 items-center gap-1">
-        {items.map(({ label, href, Icon }) => (
-          <Link
-            key={href}
-            href={href}
-            aria-label={label}
-            title={label}
-            className={cn(
-              "rounded-[10px] p-2 transition-colors",
-              isActive(pathname, href) ? "bg-[var(--bg)] text-[var(--ink)]" : "text-[var(--ink-2)] hover:bg-[var(--bg)]",
-            )}
+          {items.map(({ label, href, Icon }) => (
+            <Link
+              key={href}
+              href={href}
+              aria-label={label}
+              title={label}
+              className={cn(
+                "rounded-[var(--radius-md)] p-2 transition-colors duration-150",
+                isActive(pathname, href)
+                  ? "bg-[var(--sidebar-active)] text-[var(--ink)]"
+                  : "text-[var(--ink-2)] hover:bg-[var(--bg)]",
+              )}
+            >
+              <Icon className="size-5" aria-hidden />
+            </Link>
+          ))}
+          <button
+            type="button"
+            onClick={keluar}
+            aria-label="Keluar"
+            className="rounded-[var(--radius-md)] p-2 text-[var(--ink-2)] transition-colors duration-150 hover:bg-[var(--bg)]/30"
           >
-            <Icon className="size-5" aria-hidden />
-          </Link>
-        ))}
-        <button type="button" onClick={keluar} aria-label="Keluar" className="rounded-[10px] p-2 text-[var(--ink-2)] hover:bg-[var(--bg)]">
-          <LogOut className="size-5" aria-hidden />
-        </button>
+            <LogOut className="size-5" aria-hidden />
+          </button>
         </div>
       </nav>
     </header>
@@ -119,7 +126,7 @@ export function Keluar() {
     <button
       type="button"
       onClick={keluar}
-      className="mt-2 flex w-full items-center gap-3 rounded-[10px] px-3 py-2 text-sm text-[var(--ink-2)] transition-colors hover:bg-[var(--bg)] hover:text-[var(--ink)]"
+      className="mt-2 flex w-full items-center gap-3 rounded-[var(--radius-md)] px-3 py-2 text-body text-[var(--ink-2)] transition-colors duration-150 hover:bg-[var(--bg)]/30 hover:text-[var(--ink)]"
     >
       <LogOut className="size-4 shrink-0" aria-hidden />
       Keluar

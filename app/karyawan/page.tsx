@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/db";
+import { FIELD } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import { requireUser } from "@/lib/auth/session";
 import { can, PERMISSIONS } from "@/lib/auth/permissions";
 import { AppShell } from "@/components/app-shell";
@@ -22,7 +24,7 @@ export default async function KaryawanPage({
   if (!can(user.role, PERMISSIONS.ATTENDANCE_VIEW_ALL)) {
     return (
       <AppShell user={user} maxWidth="max-w-[1100px]">
-        <p className="text-sm text-[var(--ink-2)]">Anda tidak memiliki akses ke halaman ini.</p>
+        <p className="text-body text-[var(--ink-2)]">Anda tidak memiliki akses ke halaman ini.</p>
       </AppShell>
     );
   }
@@ -72,13 +74,13 @@ export default async function KaryawanPage({
     <AppShell user={user} maxWidth="max-w-[1100px]" className="space-y-6">
       <header className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-[28px] font-semibold tracking-[-0.02em] text-[var(--ink)]">Karyawan</h1>
-          <p className="text-[15px] text-[var(--ink-2)]">{total} karyawan terdaftar</p>
+          <h1 className="text-display font-semibold tracking-[-0.02em] text-[var(--ink)]">Karyawan</h1>
+          <p className="text-body text-[var(--ink-2)]">{total} karyawan terdaftar</p>
         </div>
         {bolehTambah && (
           <Link
             href="/karyawan/tambah"
-            className="inline-flex h-9 shrink-0 items-center gap-2 rounded-[10px] bg-[var(--brand)] px-4 text-sm font-medium text-white transition-colors hover:bg-[#0077ed]"
+            className="inline-flex h-10 shrink-0 items-center gap-2 rounded-[var(--radius-md)] bg-[var(--brand-hover)] px-4 text-body font-medium text-white transition-colors hover:brightness-95 active:scale-[0.98]"
           >
             <UserPlus className="size-4" aria-hidden />
             Tambah
@@ -94,17 +96,17 @@ export default async function KaryawanPage({
             name="q"
             defaultValue={q}
             placeholder="Cari nama, kode, email, NIK..."
-            className="h-9 w-full rounded-[10px] border border-[var(--border)] bg-[var(--surface)] pl-9 pr-3 text-sm text-[var(--ink)] placeholder:text-[var(--ink-2)]/60 outline-none focus:border-[var(--brand)] focus:ring-2 focus:ring-[var(--brand)]/20"
+            className={cn(FIELD, "pl-9")}
           />
         </div>
         <button
           type="submit"
-          className="h-9 rounded-[10px] bg-[var(--brand)] px-4 text-sm font-medium text-white transition-colors hover:bg-[#0077ed]"
+          className="h-10 rounded-[var(--radius-md)] bg-[var(--brand-hover)] px-4 text-body font-medium text-white transition-colors hover:brightness-95 active:scale-[0.98]"
         >
           Cari
         </button>
         {q && (
-          <Link href="/karyawan" className="h-9 leading-9 text-sm text-[var(--ink-2)] underline">
+          <Link href="/karyawan" className="h-9 leading-9 text-body text-[var(--ink-2)] underline">
             Reset
           </Link>
         )}
@@ -115,7 +117,7 @@ export default async function KaryawanPage({
           {employees.length === 0 ? (
             <div className="flex flex-col items-center gap-2 py-8 text-center">
               <Users className="size-10 text-[var(--ink-2)]/40" aria-hidden />
-              <p className="text-[13px] text-[var(--ink-2)]">Belum ada data karyawan.</p>
+              <p className="text-caption text-[var(--ink-2)]">Belum ada data karyawan.</p>
             </div>
           ) : (
             <Table>
@@ -138,7 +140,7 @@ export default async function KaryawanPage({
                     <TableCell>
                       <div>
                         <p className="font-medium">{e.fullName}</p>
-                        {e.email && <p className="text-[12px] text-[var(--ink-2)]">{e.email}</p>}
+                        {e.email && <p className="text-label text-[var(--ink-2)]">{e.email}</p>}
                       </div>
                     </TableCell>
                     <TableCell className="text-[var(--ink-2)]">{e.department?.name ?? "—"}</TableCell>
@@ -162,7 +164,7 @@ export default async function KaryawanPage({
                     </TableCell>
                     {bolehTambah && (
                       <TableCell>
-                        <Link href={`/karyawan/${e.id}/edit`} className="text-[13px] text-[var(--brand)] hover:underline">
+                        <Link href={`/karyawan/${e.id}/edit`} className="text-caption text-[var(--brand-ink)] hover:underline">
                           Edit
                         </Link>
                       </TableCell>
@@ -176,9 +178,9 @@ export default async function KaryawanPage({
       </Card>
 
       {totalHalaman > 1 && (
-        <nav className="flex items-center justify-between text-[13px]" aria-label="Navigasi halaman">
+        <nav className="flex items-center justify-between text-caption" aria-label="Navigasi halaman">
           {halaman > 1 ? (
-            <Link href={qs({ halaman: String(halaman - 1) })} className="rounded-[10px] px-3 py-1.5 hover:bg-[var(--surface)]">
+            <Link href={qs({ halaman: String(halaman - 1) })} className="rounded-[var(--radius-md)] px-3 py-1.5 hover:bg-[var(--bg)]">
               Sebelumnya
             </Link>
           ) : (
@@ -188,7 +190,7 @@ export default async function KaryawanPage({
             Halaman {halaman} dari {totalHalaman}
           </span>
           {halaman < totalHalaman ? (
-            <Link href={qs({ halaman: String(halaman + 1) })} className="rounded-[10px] px-3 py-1.5 hover:bg-[var(--surface)]">
+            <Link href={qs({ halaman: String(halaman + 1) })} className="rounded-[var(--radius-md)] px-3 py-1.5 hover:bg-[var(--bg)]">
               Berikutnya
             </Link>
           ) : (

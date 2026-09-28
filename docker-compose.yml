@@ -1,21 +1,19 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: absensi-postgres
-    environment:
-      POSTGRES_DB: absensi
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    # Port host 5433: port 5432 sudah dipakai PostgreSQL native di mesin ini.
     ports:
       - "5433:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: absensi
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
-      timeout: 5s
-      retries: 5
+      timeout: 3s
+      retries: 10
 
 volumes:
-  postgres_data:
+  pgdata:

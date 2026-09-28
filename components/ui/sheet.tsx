@@ -13,8 +13,8 @@ export const SheetClose = DialogPrimitive.Close;
 type Side = "left" | "right";
 
 const sideClass: Record<Side, string> = {
-  left: "left-0 h-full w-[85vw] max-w-sm rounded-r-[24px] data-[state=open]:slide-in-from-left",
-  right: "right-0 h-full w-[85vw] max-w-sm rounded-l-[24px] data-[state=open]:slide-in-from-right",
+  left: "left-0 h-full w-[85vw] max-w-sm rounded-r-[var(--radius-xl)] data-[state=open]:slide-in-from-left",
+  right: "right-0 h-full w-[85vw] max-w-sm rounded-l-[var(--radius-xl)] data-[state=open]:slide-in-from-right",
 };
 
 export const SheetContent = React.forwardRef<
@@ -22,11 +22,11 @@ export const SheetContent = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & { side?: Side }
 >(({ className, children, side = "right", ...props }, ref) => (
   <DialogPrimitive.Portal>
-    <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/25 backdrop-blur-[2px] data-[state=open]:animate-in data-[state=open]:fade-in-0" />
+    <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/25 backdrop-blur-[6px] data-[state=open]:animate-in data-[state=open]:fade-in-0" />
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed inset-y-0 z-50 flex flex-col border-[var(--border)] bg-[var(--surface)] shadow-xl",
+        "fixed inset-y-0 z-50 flex flex-col bg-[color-mix(in_srgb,var(--surface)_88%,transparent)] backdrop-blur-[30px] backdrop-saturate-150 shadow-[var(--shadow-xl)]",
         "data-[state=open]:animate-in data-[state=open]:duration-200",
         sideClass[side],
         className,
@@ -48,11 +48,11 @@ export function SheetHeader({ className, ...props }: React.HTMLAttributes<HTMLDi
 }
 
 export function SheetTitle({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
-  return <h2 className={cn("text-[17px] font-semibold tracking-[-0.01em]", className)} {...props} />;
+  return <h2 className={cn("text-h2 font-semibold tracking-[-0.01em]", className)} {...props} />;
 }
 
 export function SheetDescription({ className, ...props }: React.HTMLAttributes<HTMLParagraphElement>) {
-  return <p className={cn("mt-1 text-[13px] text-[var(--ink-2)]", className)} {...props} />;
+  return <p className={cn("mt-1 text-caption text-[var(--ink-2)]", className)} {...props} />;
 }
 
 export function SheetFooter({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {

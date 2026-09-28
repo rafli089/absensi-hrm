@@ -12,42 +12,38 @@
   --color-warn: var(--warn);
   --color-danger: var(--danger);
   --color-info: var(--info);
-  --radius-card: var(--radius-card);
-  --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+
+  /* Skala tipografi (PRD §8.8). Body 15px — lebih besar dari text-sm Tailwind,
+     sesuai README2 §Tipografi. Najlad dengan `--text-*` supaya jadi kelas native. */
+  --text-display: 28px;
+  --text-display--line-height: 1.2;
+  --text-h1: 22px;
+  --text-h1--line-height: 1.25;
+  --text-h2: 17px;
+  --text-h2--line-height: 1.3;
+  --text-h3: 15px;
+  --text-h3--line-height: 1.35;
+  --text-body: 15px;
+  --text-body--line-height: 1.5;
+  --text-caption: 13px;
+  --text-caption--line-height: 1.45;
+  --text-label: 12px;
+  --text-label--line-height: 1.4;
+  --text-time: 22px;
+  --text-time--line-height: 1.25;
 }
 
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
   background: var(--bg);
   color: var(--ink);
   font-family: var(--font-sans);
+  font-size: 15px; /* Body — PRD §8.8 */
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-@layer utilities {
-  .surface { background: var(--surface); }
-  .border-subtle { border: 1px solid var(--border); }
-  .text-ink { color: var(--ink); }
-  .text-ink-2 { color: var(--ink-2); }
-  .radius-card { border-radius: var(--radius-card); }
-}
-
-/* Motion reduce */
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-}
-
-/* Scrollbar halus */
-::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: var(--ink-2); }
+/* Scrollbar, focus ring, dan reduce-motiontokens.css — jangan diduplikasi di sini. */

@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/db";
+import { FIELD } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import { requireUser } from "@/lib/auth/session";
 import { can } from "@/lib/auth/permissions";
 import { PERMISSIONS } from "@/lib/auth/permissions";
@@ -93,41 +95,41 @@ export default async function RiwayatPage({
   return (
     <AppShell user={user} maxWidth="max-w-[1100px]" className="space-y-6">
       <header className="space-y-2">
-        <h1 className="text-[28px] font-semibold tracking-[-0.02em] text-[var(--ink)]">Riwayat Absensi</h1>
-        <p className="text-[15px] text-[var(--ink-2)]">
+        <h1 className="text-display font-semibold tracking-[-0.02em] text-[var(--ink)]">Riwayat Absensi</h1>
+        <p className="text-body text-[var(--ink-2)]">
           {total} catatan · {lihatSemua ? "Semua karyawan" : user.fullName}
         </p>
       </header>
 
       {/* Filter — URL search params, tanpa state client (deviasi PRD §14) */}
       <form method="GET" className="flex flex-wrap items-end gap-3">
-        <label className="block space-y-1 text-[13px]">
+        <label className="block space-y-1 text-caption">
           <span className="text-[var(--ink-2)]">Dari</span>
           <input
             type="date"
             name="dari"
             defaultValue={tanggal(sp.dari) ?? ""}
-            className="block h-9 rounded-[10px] border border-[var(--border)] bg-[var(--surface)] px-2.5 text-sm text-[var(--ink)]"
+            className={cn(FIELD, "block w-auto px-2.5")}
           />
         </label>
 
-        <label className="block space-y-1 text-[13px]">
+        <label className="block space-y-1 text-caption">
           <span className="text-[var(--ink-2)]">Sampai</span>
           <input
             type="date"
             name="sampai"
             defaultValue={tanggal(sp.sampai) ?? ""}
-            className="block h-9 rounded-[10px] border border-[var(--border)] bg-[var(--surface)] px-2.5 text-sm text-[var(--ink)]"
+            className={cn(FIELD, "block w-auto px-2.5")}
           />
         </label>
 
         {lihatSemua && karyawan.length > 0 && (
-          <label className="block space-y-1 text-[13px]">
+          <label className="block space-y-1 text-caption">
             <span className="text-[var(--ink-2)]">Karyawan</span>
             <select
               name="employeeId"
               defaultValue={sp.employeeId ?? ""}
-              className="block h-9 rounded-[10px] border border-[var(--border)] bg-[var(--surface)] px-2.5 text-sm text-[var(--ink)]"
+              className={cn(FIELD, "block w-auto px-2.5")}
             >
               <option value="">Semua</option>
               {karyawan.map((k) => (
@@ -140,12 +142,12 @@ export default async function RiwayatPage({
         )}
 
         {lihatSemua && departemen.length > 0 && (
-          <label className="block space-y-1 text-[13px]">
+          <label className="block space-y-1 text-caption">
             <span className="text-[var(--ink-2)]">Departemen</span>
             <select
               name="departemen"
               defaultValue={sp.departemen ?? ""}
-              className="block h-9 rounded-[10px] border border-[var(--border)] bg-[var(--surface)] px-2.5 text-sm text-[var(--ink)]"
+              className={cn(FIELD, "block w-auto px-2.5")}
             >
               <option value="">Semua</option>
               {departemen.map((d) => (
@@ -158,12 +160,12 @@ export default async function RiwayatPage({
         )}
 
         {lihatSemua && shift.length > 0 && (
-          <label className="block space-y-1 text-[13px]">
+          <label className="block space-y-1 text-caption">
             <span className="text-[var(--ink-2)]">Shift</span>
             <select
               name="shiftId"
               defaultValue={sp.shiftId ?? ""}
-              className="block h-9 rounded-[10px] border border-[var(--border)] bg-[var(--surface)] px-2.5 text-sm text-[var(--ink)]"
+              className={cn(FIELD, "block w-auto px-2.5")}
             >
               <option value="">Semua</option>
               {shift.map((s) => (
@@ -176,12 +178,12 @@ export default async function RiwayatPage({
         )}
 
         {lihatSemua && kantor.length > 0 && (
-          <label className="block space-y-1 text-[13px]">
+          <label className="block space-y-1 text-caption">
             <span className="text-[var(--ink-2)]">Kantor</span>
             <select
               name="officeId"
               defaultValue={sp.officeId ?? ""}
-              className="block h-9 rounded-[10px] border border-[var(--border)] bg-[var(--surface)] px-2.5 text-sm text-[var(--ink)]"
+              className={cn(FIELD, "block w-auto px-2.5")}
             >
               <option value="">Semua</option>
               {kantor.map((o) => (
@@ -193,12 +195,12 @@ export default async function RiwayatPage({
           </label>
         )}
 
-        <label className="block space-y-1 text-[13px]">
+        <label className="block space-y-1 text-caption">
           <span className="text-[var(--ink-2)]">Status</span>
           <select
             name="status"
             defaultValue={sp.status ?? ""}
-            className="block h-9 rounded-[10px] border border-[var(--border)] bg-[var(--surface)] px-2.5 text-sm text-[var(--ink)]"
+            className={cn(FIELD, "block w-auto px-2.5")}
           >
             <option value="">Semua</option>
             {STATUS_FILTER.map((s) => (
@@ -211,12 +213,15 @@ export default async function RiwayatPage({
 
         <button
           type="submit"
-          className="h-9 rounded-[10px] bg-[var(--brand)] px-4 text-sm font-medium text-white transition-colors hover:bg-[#0077ed]"
+          className="h-10 rounded-[var(--radius-md)] bg-[var(--brand-hover)] px-4 text-body font-medium text-white transition-colors hover:brightness-95 active:scale-[0.98]"
         >
           Terapkan
         </button>
         {adaFilter && (
-          <Link href="/absensi/riwayat" className="h-9 leading-9 text-sm text-[var(--ink-2)] underline">
+          <Link
+            href="/absensi/riwayat"
+            className="h-10 leading-10 text-body text-[var(--ink-2)] underline"
+          >
             Reset
           </Link>
         )}
@@ -225,7 +230,7 @@ export default async function RiwayatPage({
       <Card>
         <CardContent className="pt-5">
           {rows.length === 0 ? (
-            <p className="text-[13px] text-[var(--ink-2)]">Belum ada data absensi.</p>
+            <p className="text-caption text-[var(--ink-2)]">Belum ada data absensi.</p>
           ) : (
             <Table>
               <TableHeader>
@@ -255,10 +260,10 @@ export default async function RiwayatPage({
                     <TableCell className="font-mono">{formatJam(a.checkOut)}</TableCell>
                     <TableCell className="font-mono">{formatMenit(a.workMinutes ?? 0)}</TableCell>
                     <TableCell className="font-mono">
-                      {a.lateMinutes ? <span className="text-[var(--warn)]">{a.lateMinutes}m</span> : "—"}
+                      {a.lateMinutes ? <span className="text-[var(--warn-ink)]">{a.lateMinutes}m</span> : "—"}
                     </TableCell>
                     <TableCell className="font-mono">
-                      {a.overtimeMinutes ? <span className="text-[var(--ok)]">{a.overtimeMinutes}m</span> : "—"}
+                      {a.overtimeMinutes ? <span className="text-[var(--ok-ink)]">{a.overtimeMinutes}m</span> : "—"}
                     </TableCell>
                     <TableCell>
                       <Badge tone={STATUS_ABSENSI[a.status]?.tone ?? "neutral"}>
@@ -288,9 +293,9 @@ export default async function RiwayatPage({
       </Card>
 
       {totalHalaman > 1 && (
-        <nav className="flex items-center justify-between text-[13px]" aria-label="Navigasi halaman">
+        <nav className="flex items-center justify-between text-caption" aria-label="Navigasi halaman">
           {halaman > 1 ? (
-            <Link href={qs({ halaman: String(halaman - 1) })} className="rounded-[10px] px-3 py-1.5 hover:bg-[var(--surface)]">
+            <Link href={qs({ halaman: String(halaman - 1) })} className="rounded-full px-3 py-1.5 text-body hover:bg-[var(--bg)]">
               Sebelumnya
             </Link>
           ) : (
@@ -300,7 +305,7 @@ export default async function RiwayatPage({
             Halaman {halaman} dari {totalHalaman}
           </span>
           {halaman < totalHalaman ? (
-            <Link href={qs({ halaman: String(halaman + 1) })} className="rounded-[10px] px-3 py-1.5 hover:bg-[var(--surface)]">
+            <Link href={qs({ halaman: String(halaman + 1) })} className="rounded-full px-3 py-1.5 text-body hover:bg-[var(--bg)]">
               Berikutnya
             </Link>
           ) : (
@@ -319,3 +324,4 @@ export default async function RiwayatPage({
     return `/absensi/riwayat?${p.toString()}`;
   }
 }
+

@@ -73,7 +73,7 @@ export function TombolStatus({
           </Button>
         ))}
       </div>
-      {galat && <p className="max-w-[260px] text-right text-[12px] text-[var(--danger)]">{galat}</p>}
+      {galat && <p className="max-w-[260px] text-right text-label text-[var(--danger-ink)]">{galat}</p>}
     </div>
   );
 }
