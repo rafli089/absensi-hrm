@@ -13,12 +13,13 @@ import { TombolCetak } from "@/components/penggajian/tombol-cetak";
 
 export const metadata = { title: "Laporan" };
 
-// ponytail: laporan ini untuk REPORT_GENERATE (HR ke atas). SUPERVISOR punya
-// TEAM_REPORT di peta permission tapi belum bisa dipakai di sini, karena
-// `departments.managerId` masih null semua — tidak ada data yang menandai
-// tim milik siapa. Setelah manager diisi, tambahkan: kalau role SUPERVISOR
-// dan bukan REPORT_GENERATE, paksa `departemenId` ke departemen yang ia
-// manage.
+// Halaman ini untuk REPORT_GENERATE (HR ke atas) atau TEAM_REPORT
+// (SUPERVISOR). Supervisor cuma melihat tim sendiri: `departmentId`
+// dipaksakan, tanpa tombol pilih departemen/karyawan lain.
+// ponytail: "tim sendiri" = `user.departmentId` (departemen milik user).
+// Data `departments.managerId` masih null semua, jadi tidak bisa
+// menandai departemen yang dia manage. Setelah manager diisi, ganti ke
+// managerId + tambah validasi yang sama di /api/reports/attendance.
 
 const STATUS_OPTIONS = Object.entries(STATUS_LABEL);
 
@@ -34,10 +35,21 @@ export default async function LaporanPage({
   }>;
 }) {
   const user = await requireUser();
-  if (!can(user.role, PERMISSIONS.REPORT_GENERATE)) {
+  const punyaLaporan = can(user.role, PERMISSIONS.REPORT_GENERATE) || can(user.role, PERMISSIONS.TEAM_REPORT);
+  if (!punyaLaporan) {
     return (
       <AppShell user={user} maxWidth="max-w-[1200px]">
         <p className="text-body text-[var(--ink-2)]">Anda tidak memiliki akses ke halaman ini.</p>
+      </AppShell>
+    );
+  }
+
+  // Supervisor tanpa departemen tidak punya tim untuk dilaporkan.
+  const hanyaTim = !can(user.role, PERMISSIONS.REPORT_GENERATE);
+  if (hanyaTim && !user.departmentId) {
+    return (
+      <AppShell user={user} maxWidth="max-w-[1200px]">
+        <p className="text-body text-[var(--ink-2)]">Akun Anda belum terhubung ke departemen.</p>
       </AppShell>
     );
   }
@@ -50,19 +62,25 @@ export default async function LaporanPage({
   const hariIni = sekarang.toISOString().slice(0, 10);
   const awalBulan = new Date(Date.UTC(sekarang.getUTCFullYear(), sekarang.getUTCMonth(), 1)).toISOString().slice(0, 10);
 
+  // Supervisor: filter karyawan/departemen dikunci ke tim sendiri — parameter
+  // dari URL diabaikan supaya tidak bisa melihat data di luar tim.
   const f = {
     dari: tanggal(sp.dari) || awalBulan,
     sampai: tanggal(sp.sampai) || hariIni,
-    departemen: sp.departemen || undefined,
-    employeeId: sp.employeeId || undefined,
+    departemen: hanyaTim ? user.departmentId! : sp.departemen || undefined,
+    employeeId: hanyaTim ? undefined : sp.employeeId || undefined,
     status: sp.status || undefined,
   };
 
-  const adaFilter = Boolean(sp.dari || sp.sampai || sp.departemen || sp.employeeId || sp.status);
+  const adaFilter = hanyaTim ? true : Boolean(sp.dari || sp.sampai || sp.departemen || sp.employeeId || sp.status);
   const [baris, departemen, karyawan] = await Promise.all([
     adaFilter ? ambilLaporan(f) : Promise.resolve([]),
     prisma.department.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }),
-    prisma.employee.findMany({ where: { isActive: true }, select: { id: true, employeeCode: true, fullName: true }, orderBy: { fullName: "asc" } }),
+    prisma.employee.findMany({
+      where: { isActive: true, ...(hanyaTim ? { departmentId: user.departmentId! } : {}) },
+      select: { id: true, employeeCode: true, fullName: true },
+      orderBy: { fullName: "asc" },
+    }),
   ]);
   const ringkasan = ringkas(baris);
 
@@ -89,20 +107,24 @@ export default async function LaporanPage({
           <label className="mb-1 block text-label text-[var(--ink-2)]">Sampai</label>
           <input type="date" name="sampai" defaultValue={f.sampai} className={cn(FIELD, "w-auto")} />
         </div>
-        <div>
-          <label className="mb-1 block text-label text-[var(--ink-2)]">Departemen</label>
-          <select name="departemen" defaultValue={f.departemen} className={cn(FIELD, "w-auto")}>
-            <option value="">Semua</option>
-            {departemen.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-          </select>
-        </div>
-        <div>
-          <label className="mb-1 block text-label text-[var(--ink-2)]">Karyawan</label>
-          <select name="employeeId" defaultValue={f.employeeId} className={cn(FIELD, "w-auto")}>
-            <option value="">Semua</option>
-            {karyawan.map((k) => <option key={k.id} value={k.id}>{k.employeeCode} {k.fullName}</option>)}
-          </select>
-        </div>
+        {!hanyaTim && (
+          <>
+            <div>
+              <label className="mb-1 block text-label text-[var(--ink-2)]">Departemen</label>
+              <select name="departemen" defaultValue={f.departemen} className={cn(FIELD, "w-auto")}>
+                <option value="">Semua</option>
+                {departemen.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="mb-1 block text-label text-[var(--ink-2)]">Karyawan</label>
+              <select name="employeeId" defaultValue={f.employeeId} className={cn(FIELD, "w-auto")}>
+                <option value="">Semua</option>
+                {karyawan.map((k) => <option key={k.id} value={k.id}>{k.employeeCode} {k.fullName}</option>)}
+              </select>
+            </div>
+          </>
+        )}
         <div>
           <label className="mb-1 block text-label text-[var(--ink-2)]">Status</label>
           <select name="status" defaultValue={f.status} className={cn(FIELD, "w-auto")}>

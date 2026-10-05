@@ -1,9 +1,9 @@
-import { requireApiPermission, clientIp } from "@/lib/auth/session";
-import { PERMISSIONS } from "@/lib/auth/permissions";
+import { getSessionUser, clientIp } from "@/lib/auth/session";
+import { can, PERMISSIONS } from "@/lib/auth/permissions";
 import { headers } from "next/headers";
 import { audit } from "@/lib/audit";
 import { ambilLaporan, keCsv, ringkas, type FilterLaporan } from "@/lib/laporan/rekap";
-import { AppError, toResponse } from "@/lib/error";
+import { AppError, toResponse, UnauthorizedError, ForbiddenError } from "@/lib/error";
 
 /**
  * Export CSV rekap absensi (PRD §16).
@@ -15,22 +15,28 @@ import { AppError, toResponse } from "@/lib/error";
  * application/vnd.ms-excel agar Excel membukanya langsung.
  * BOM UTF-8 di kepala file supaya Excel Windows tidak rusak.
  *
- * ponytail: export PDF belum dibuat karena tidak ada library PDF.
- * Print browser (`window.print()`) sudah menghasilkan PDF.
- * Kalau butuh PDF server-side, tambahkan `@react-pdf/renderer`
- * atau cetak ke layar lalu "Simpan sebagai PDF" browser.
+ * browser print (`window.print()`) menghasilkan PDF. Server-side PDF
+ * dimigrasi bila butuh (ponytail).
  */
 
 export async function GET(req: Request) {
-  const auth = await requireApiPermission(PERMISSIONS.REPORT_GENERATE);
-  if (auth instanceof Response) return auth;
+  // REPORT_GENERATE = semua data; TEAM_REPORT = data departemen sendiri.
+  // scope(data) dipakai halaman /laporan dan route ini, jadi satu sumber.
+  const user = await getSessionUser();
+  if (!user) return toResponse(new UnauthorizedError());
+  const supervise = can(user.role, PERMISSIONS.REPORT_GENERATE) || can(user.role, PERMISSIONS.TEAM_REPORT);
+  if (!supervise) return toResponse(new ForbiddenError());
+  const hanyaTim = !can(user.role, PERMISSIONS.REPORT_GENERATE);
+  if (hanyaTim && !user.departmentId) return toResponse(new ForbiddenError("Akun belum terhubung ke departemen."));
+  const auth = user;
 
   const url = new URL(req.url);
   const f: FilterLaporan = {
     dari: url.searchParams.get("dari") ?? "",
     sampai: url.searchParams.get("sampai") ?? "",
-    departemen: url.searchParams.get("departemen") ?? undefined,
-    employeeId: url.searchParams.get("employeeId") ?? undefined,
+    // Supervisor: abaikan param departemen/karyawan dari URL — kunci ke tim sendiri.
+    departemen: hanyaTim ? user.departmentId! : url.searchParams.get("departemen") ?? undefined,
+    employeeId: hanyaTim ? undefined : url.searchParams.get("employeeId") ?? undefined,
     status: url.searchParams.get("status") ?? undefined,
   };
 
