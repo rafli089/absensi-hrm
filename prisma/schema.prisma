@@ -141,6 +141,12 @@ enum RecordStatus {
   INACTIVE
 }
 
+enum PasswordChangeStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum LeaveType {
   ANNUAL     // cuti tahunan
   SICK       // cuti sakit
@@ -174,6 +180,8 @@ model User {
   auditLogs     AuditLog[]
   securityEvents SecurityEvent[]
   approvedPayrolls Payroll[] @relation("PayrollApprover")
+  passwordChangeRequests    PasswordChangeRequest[]
+  approvedPasswordChanges PasswordChangeRequest[] @relation("PasswordChangeApprover")
 
   @@index([role])
   @@map("users")
@@ -583,6 +591,32 @@ model AuditLog {
   @@index([entityType, entityId])
   @@index([createdAt])
   @@map("audit_logs")
+}
+
+/**
+ * Pengajuan ganti kata sandi karyawan.
+ *
+ * Karyawan tidak boleh langsung ubah kata sandi — pengajuan PENDING ditunggu
+ * keputusan atasan (SPV/HR/Admin). Saat APPROVED, hash kata sandi baru
+ * dituliskan ke `User.passwordHash`.
+ */
+model PasswordChangeRequest {
+  id           String                 @id @default(cuid())
+  userId       String
+  user         User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Hash bcrypt kata sandi baru. Penyimpanan PLAINTEXT dilarang.
+  newPasswordHash String
+  status       PasswordChangeStatus  @default(PENDING)
+  decidedById  String?
+  decidedBy    User?                  @relation("PasswordChangeApprover", fields: [decidedById], references: [id], onDelete: SetNull)
+  decidedAt    DateTime?
+  decisionNote String?
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+
+  @@index([status])
+  @@index([userId, status])
+  @@map("password_change_requests")
 }
 
 // ---------- PENGATURAN ----------

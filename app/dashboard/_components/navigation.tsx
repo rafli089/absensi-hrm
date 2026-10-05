@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { LayoutDashboard, Clock3, History, Users, Calendar, CalendarCheck, Wallet, ShieldAlert, FileText, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, Clock3, History, Users, Calendar, CalendarCheck, Wallet, ShieldAlert, FileText, Settings, LogOut, UserCog } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { type SessionUser } from "@/lib/auth/session";
 import { ROLE_LABEL, can, PERMISSIONS, type Permission } from "@/lib/auth/permissions";
@@ -21,6 +21,7 @@ const ITEMS: Item[] = [
   { label: "Laporan", href: "/laporan", Icon: FileText, need: PERMISSIONS.REPORT_GENERATE },
   { label: "Keamanan", href: "/keamanan", Icon: ShieldAlert, need: PERMISSIONS.SECURITY_VIEW },
   { label: "Pengaturan", href: "/pengaturan/kantor", Icon: Settings, need: PERMISSIONS.SETTINGS_MANAGE },
+  { label: "Akun", href: "/akun", Icon: UserCog, need: PERMISSIONS.PASSWORD_RESET },
 ];
 
 function isActive(pathname: string, href: string) {
