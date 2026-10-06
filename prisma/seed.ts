@@ -111,7 +111,11 @@ async function main() {
 
     await prisma.user.upsert({
       where: { email: a.email },
-      update: { role: a.role },
+      // Reset passwordHash juga — kalau tidak, akun yang password-nya sudah
+      // diganti (mis. lewat fitur ganti password) tidak bisa login pakai
+      // password123 lagi, jadi seed tidak benar-benar mengembalikan demo ke
+      // kondisi awal.
+      update: { role: a.role, passwordHash: hash("password123") },
       create: {
         email: a.email,
         username: a.username,
