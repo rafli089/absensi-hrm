@@ -8,5 +8,6 @@ build
 .DS_Store
 next-env.d.ts
 *.tsbuildinfo
-/uploads
+# Foto absensi = data runtime, bukan kode (dicek via DB, bukan file)
+/public/uploads
 .prisma/*.db
