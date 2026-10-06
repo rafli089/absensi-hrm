@@ -1,5 +1,6 @@
 import { getSessionUser, clientIp } from "@/lib/auth/session";
 import { can, PERMISSIONS } from "@/lib/auth/permissions";
+import { prisma } from "@/lib/db";
 import { headers } from "next/headers";
 import { audit } from "@/lib/audit";
 import { ambilLaporan, keCsv, ringkas, type FilterLaporan } from "@/lib/laporan/rekap";
@@ -51,7 +52,17 @@ export async function GET(req: Request) {
 
   const baris = await ambilLaporan(f);
   const ringkasan = ringkas(baris);
-  const csv = keCsv(baris, ringkasan, f, `${auth.id} (${auth.role})`);
+  // Header "Filter ..." harus menampilkan nama, bukan CUID.
+  const dept = f.departemen
+    ? await prisma.department.findUnique({ where: { id: f.departemen }, select: { name: true } })
+    : null;
+  const emp = f.employeeId
+    ? await prisma.employee.findUnique({ where: { id: f.employeeId }, select: { fullName: true } })
+    : null;
+  const csv = keCsv(baris, ringkasan, f, `${auth.id} (${auth.role})`, {
+    departemen: dept?.name ?? "semua",
+    karyawan: emp?.fullName ?? "semua",
+  });
 
   await audit({
     userId: auth.id,

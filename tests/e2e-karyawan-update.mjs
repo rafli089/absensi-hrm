@@ -71,10 +71,9 @@ cek("nama berubah", diupdate.karyawan?.fullName === pilih.fullName);
 cek("resignDate tersimpan", diupdate.karyawan?.resignDate?.startsWith("2026-12-31"), JSON.stringify(diupdate.karyawan?.resignDate));
 
 // --- PUT bentrok ---
-// ambil EMP-001 (seed) untuk bentrokkan kode
+// pakai kode EMP-001 (seed) untuk bentrokkan kode
 const { PrismaClient } = await import("@prisma/client");
 const p = new PrismaClient();
-const emp001 = await p.employee.findUnique({ where: { employeeCode: "EMP-001" }, select: { id: true } });
 r = await api(admin, "PUT", "/api/employee/" + id, { ...pilih, employeeCode: "EMP-001" });
 cek("PUT kode bentrok 409", r.status === 409, "status=" + r.status);
 

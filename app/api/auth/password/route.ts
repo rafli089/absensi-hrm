@@ -3,7 +3,7 @@ import { requireApiPermission, clientIp } from "@/lib/auth/session";
 import { PERMISSIONS } from "@/lib/auth/permissions";
 import { AppError, toResponse } from "@/lib/error";
 import { hash, verify, kuat } from "@/lib/auth/hashi";
-import { audit, catatKeamanan } from "@/lib/audit";
+import { audit } from "@/lib/audit";
 import { izinkan } from "@/lib/keamanan/rate-limit";
 import { headers } from "next/headers";
 import { z } from "zod";

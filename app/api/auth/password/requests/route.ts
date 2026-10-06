@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/db";
 import { requireApiPermission } from "@/lib/auth/session";
 import { PERMISSIONS } from "@/lib/auth/permissions";
-import { ForbiddenError, toResponse } from "@/lib/error";
 
 /**
  * Daftar pengajuan ganti kata sandi.

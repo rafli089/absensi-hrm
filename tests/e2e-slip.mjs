@@ -44,7 +44,6 @@ await p.payrollItem.createMany({
 
 const admin = await login("super@kantor.id");
 const kari2 = await login("budi@kantor.id");
-const andi = await login("andi@kantor.id"); // SUPERVISOR, bukan EMPLOYEE_MANAGE
 
 console.log("\n-- /penggajian/[id]/slip --");
 let r = await fetch(BASE + "/penggajian/" + pr.id + "/slip", { headers: { Cookie: admin }, redirect: "manual" });

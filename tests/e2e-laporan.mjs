@@ -26,7 +26,7 @@ cek("karyawan ditolak", h.includes("tidak memiliki akses"), "status=" + r.status
 
 r = await fetch(BASE + "/laporan", { headers: { Cookie: andi }, redirect: "manual" });
 h = await r.text();
-cek("supervisor ditolak (REPORT_GENERATE hanya HR+)", h.includes("tidak memiliki akses"), "status=" + r.status);
+cek("supervisor dapat (TEAM_REPORT)", r.status === 200 && h.includes("Laporan"), "status=" + r.status);
 
 r = await fetch(BASE + "/laporan", { headers: { Cookie: admin }, redirect: "manual" });
 h = await r.text();
@@ -48,8 +48,10 @@ cek("tanpa format=csv -> 400", r.status === 400);
 r = await fetch(BASE + "/api/reports/attendance?dari=2026-09-01&sampai=2026-09-30&format=csv", { headers: { Cookie: sari } });
 cek("karyawan CSV ditolak", r.status === 403);
 
+// Supervisor punya TEAM_REPORT (bukan REPORT_GENERATE): boleh ekspor CSV,
+// tapi data-nya dikunci ke departemennya sendiri.
 r = await fetch(BASE + "/api/reports/attendance?dari=2026-09-01&sampai=2026-09-30&format=csv", { headers: { Cookie: andi } });
-cek("supervisor CSV ditolak", r.status === 403);
+cek("supervisor CSV 200 (TEAM_REPORT)", r.status === 200, "status=" + r.status);
 
 console.log("\n-- data CSV --");
 const csv = await fetch(BASE + "/api/reports/attendance?dari=2026-09-01&sampai=2026-09-30&format=csv", { headers: { Cookie: admin } });
@@ -60,14 +62,40 @@ cek("ada header tabel", baris.some((l) => l.includes("Kode,Nama,Departemen")));
 cek("ada baris data", baris.length > 10);
 cek("kolom alasan ditolak", baris.some((l) => l.includes("Alasan Ditolak")));
 
-// Filter per departemen
+// Filter per departemen + scoping supervisor
+console.log("\n-- scope & filter --");
 const { PrismaClient } = await import("@prisma/client");
 const p = new PrismaClient();
-const eng = await p.department.findUnique({ where: { name: "Engineering" }, select: { id: true } });
+const semuaDept = await p.department.findMany({ select: { id: true, name: true } });
+const andiUser = await p.user.findUnique({
+  where: { email: "andi@kantor.id" },
+  select: { employee: { select: { departmentId: true } } },
+});
+const andiDept = andiUser.employee.departmentId;
+// Nama karyawan per departemen, buat cek CSV supervisor tidak bocor data tim lain.
+const namaPerDept = await p.employee.findMany({ select: { fullName: true, departmentId: true } });
 await p.$disconnect();
-r = await fetch(BASE + "/api/reports/attendance?dari=2026-09-01&sampai=2026-09-30&format=csv&departemen=" + eng.id, { headers: { Cookie: admin } });
-const csvDept = await r.text();
-cek("filter departemen", csvDept.includes("Engineering") || csvDept.split("\n").length <= 2);
+
+const Q = "/api/reports/attendance?dari=2026-09-01&sampai=2026-09-30&format=csv";
+const eng = semuaDept.find((d) => d.name === "Engineering");
+
+r = await fetch(BASE + Q + "&departemen=" + eng.id, { headers: { Cookie: admin } });
+const csvEng = await r.text();
+cek("filter departemen: 200", r.status === 200, "status=" + r.status);
+cek(
+  "filter departemen: hanya Engineering",
+  csvEng.includes("Engineering") &&
+    !namaPerDept.filter((e) => e.departmentId !== eng.id).some((e) => csvEng.includes(e.fullName)),
+  "baris dari departemen lain ikut kebawa",
+);
+
+// Supervisor: param departemen diabaikan, hasil dikunci ke timnya sendiri.
+r = await fetch(BASE + Q + "&departemen=" + semuaDept.find((d) => d.id !== andiDept).id, {
+  headers: { Cookie: andi },
+});
+const csvSup = await r.text();
+const bocor = namaPerDept.filter((e) => e.departmentId !== andiDept).filter((e) => csvSup.includes(e.fullName));
+cek("supervisor terkunci ke tim sendiri", bocor.length === 0, "bocor: " + bocor.map((e) => e.fullName).join(", "));
 
 console.log(`\n=== ${lulus} lulus, ${gagal} gagal ===`);
 process.exit(gagal ? 1 : 0);

@@ -68,7 +68,7 @@ cek("semua punya items", payrolls.every((pr) => pr.items.length > 0));
 
 // Idempotency: jalankan ulang, tidak duplikat
 r = await calc(admin, { periodStart, periodEnd });
-const data2 = await r.json();
+await r.json();
 const payrolls2 = await p.payroll.findMany({ where: { periodStart: new Date(periodStart + "T00:00:00.000Z") } });
 cek("tidak duplikat saat re-run", payrolls2.length === payrolls.length, `${payrolls.length} -> ${payrolls2.length}`);
 

@@ -25,7 +25,6 @@ const hitung = (html) => {
 
 const admin = await login("super@kantor.id");
 const sari = await login("sari@kantor.id"); // EMPLOYEE
-const andi = await login("andi@kantor.id"); // SUPERVISOR
 
 const buka = (qs, cookie) => fetch(BASE + "/absensi/riwayat" + qs, { headers: { Cookie: cookie }, redirect: "manual" });
 

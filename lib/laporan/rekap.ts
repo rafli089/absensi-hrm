@@ -146,7 +146,15 @@ function sel(value: string | number | null): string {
   return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
 }
 
-export function keCsv(baris: BarisLaporan[], ringkasan: Ringkasan, f: FilterLaporan, dibuatOleh: string): string {
+export function keCsv(
+  baris: BarisLaporan[],
+  ringkasan: Ringkasan,
+  f: FilterLaporan,
+  dibuatOleh: string,
+  // Nama untuk meta "Filter ...". Tanpa ini header CSV menampilkan CUID,
+  // yang tidak berguna untuk pembaca laporan.
+  nama: { departemen?: string; karyawan?: string } = {},
+): string {
   const kepala = [
     "Kode", "Nama", "Departemen", "Shift", "Tanggal", "Check In", "Check Out", "Status",
     "Terlambat (menit)", "Jam Kerja (menit)", "Lembur (menit)", "Jarak (m)", "Foto", "Alasan Ditolak",
@@ -167,8 +175,8 @@ export function keCsv(baris: BarisLaporan[], ringkasan: Ringkasan, f: FilterLapo
     ["Dibuat oleh", dibuatOleh],
     ["Dibuat pada", new Date().toISOString()],
     ["Periode", `${f.dari} s/d ${f.sampai}`],
-    ["Filter departemen", f.departemen ? f.departemen : "semua"],
-    ["Filter karyawan", f.employeeId ? f.employeeId : "semua"],
+    ["Filter departemen", nama.departemen ?? (f.departemen ? f.departemen : "semua")],
+    ["Filter karyawan", nama.karyawan ?? (f.employeeId ? f.employeeId : "semua")],
     ["Filter status", f.status ? STATUS_LABEL[f.status] ?? f.status : "semua"],
     [],
     ["Ringkasan", ""],
