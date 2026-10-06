@@ -1,36 +1,62 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Absensi & HR
 
-## Getting Started
+Aplikasi absensi karyawan + HR: check-in/out berbasis GPS, shift, payroll, slip gaji,
+cuti, lembur, dan ganti kata sandi (karyawan lewat approval atasan).
 
-First, run the development server:
+Next.js 15 (App Router) · Prisma · PostgreSQL · TypeScript · Tailwind v4
+
+## Menjalankan (dev)
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env          # isi SESSION_SECRET bila perlu
+docker compose up -d          # postgres di localhost:5433
+npm install
+npx prisma migrate deploy
+npm run db:seed               # akun demo, semua password: password123
+npm run dev                   # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Prerequisite: Node 20+ dan Docker Desktop.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Akun demo
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Role | Email | Password |
+|---|---|---|
+| `SUPER_ADMIN` | super@kantor.id | password123 |
+| `ADMIN` | oka@kantor.id | password123 |
+| `HR` | rina@kantor.id | password123 |
+| `SUPERVISOR` | andi@kantor.id | password123 |
+| `EMPLOYEE` | sari / budi / dewi `@kantor.id` | password123 |
 
-## Learn More
+`db:seed` me-reset `passwordHash` ke `password123` dan menolak jalan kalau
+`NODE_ENV=production` — jangan jalankan di produksi.
 
-To learn more about Next.js, take a look at the following resources:
+## Script
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Command | Fungsi |
+|---|---|
+| `npm run dev` | Dev server (turbopack) |
+| `npm run build` / `npm start` | Build & jalankan produksi |
+| `npm test` | Unit test (`tsx --test tests/*.test.ts`) |
+| `npm run test:e2e` | E2E API (butuh dev server jalan di :3000) |
+| `npm run lint` | ESLint |
+| `npx prisma migrate dev` | Buat migration baru saat schema berubah |
+| `npm run db:seed` | Reset data demo |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Ganti kata sandi
 
-## Deploy on Vercel
+Halaman `/akun`.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `SUPERVISOR` / `HR` / `ADMIN` / `SUPER_ADMIN` — langsung aktif.
+- `EMPLOYEE` — masuk daftar tunggu, perlu disetujui atasan/HR/admin. Password baru
+  tidak aktif sebelum disetujui.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Endpoint: `POST /api/auth/password`, `GET /api/auth/password/requests`,
+`PATCH /api/auth/password/requests/[id]` (`{ keputusan, catatan? }`).
+
+## Lainnya
+
+- `README2.md` — design system (Apple OS aesthetic, token warna, tipografi).
+- `PRD.md` — spesifikasi produk.
+- `README_CI_CD.md` — pipeline.
+- `middleware.ts` guard route; `lib/auth/permissions.ts` definisi permission per role.

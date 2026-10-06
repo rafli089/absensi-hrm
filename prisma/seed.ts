@@ -4,8 +4,15 @@ import { hashSync } from "bcryptjs";
 const prisma = new PrismaClient();
 
 /** Seed data: satu kantor, 5 role, shift, komponen gaji, karyawan demo.
- *  Jalankan: `npm run db:seed`. Idempoten — pakai upsert, aman dijalankan berkali-kali. */
+ *  Jalankan: `npm run db:seed`. Idempoten — pakai upsert, aman dijalankan berkali-kali.
+ *
+ *  Seed me-reset passwordHash ke "password123", jadi kalau tanpa guard ini
+ *  accidentally jalan di produksi, semua akun real kehilangan password-nya.
+ *  Fail fast kalau NODE_ENV=production. */
 async function main() {
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("db:seed ditolak di NODE_ENV=production — seed me-reset password.");
+  }
   const hash = (p: string) => hashSync(p, 10);
 
   await prisma.office.upsert({
