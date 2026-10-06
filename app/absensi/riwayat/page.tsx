@@ -274,7 +274,10 @@ export default async function RiwayatPage({
                     <TableCell>
                       {urlFoto(a.photo) ? (
                         <a href={urlFoto(a.photo)!} target="_blank" rel="noreferrer" title="Lihat foto">
-                          <img
+                            {/* ponytail: thumbnail 40px di <a>, optimasi next/image
+                                tidak menambah nilai; ganti kalau jumlah baris >> 100. */}
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
                             src={urlFoto(a.photo)!}
                             alt={`Foto absensi ${a.employee?.fullName ?? ""} ${formatTanggal(a.date)}`}
                             loading="lazy"

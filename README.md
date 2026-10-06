@@ -60,3 +60,14 @@ Endpoint: `POST /api/auth/password`, `GET /api/auth/password/requests`,
 - `PRD.md` — spesifikasi produk.
 - `README_CI_CD.md` — pipeline.
 - `middleware.ts` guard route; `lib/auth/permissions.ts` definisi permission per role.
+
+## Batasan produksi
+
+Rate-limit login disimpan in-memory per proses, jadi saat aplikasi dijalankan
+lebih dari satu replica (atau di serverless), batas percobaan bisa dilewati
+karena tiap proses punya hitungan sendiri. Pakai Redis (`REDIS_URL`) kalau
+deploy > 1 instance.
+
+Foto absensi disimpan di `public/uploads/` — folder ini tidak di-track git
+(data runtime). Kalau butuh Scaling horizontal, pindahkan ke object storage
+(S3 presigned) dan simpan path-nya di DB.

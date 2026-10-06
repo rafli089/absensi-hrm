@@ -114,6 +114,9 @@ export function AmbilFoto({
     <div className="flex flex-col gap-3">
       <div className="relative aspect-[4/3] overflow-hidden rounded-[20px] bg-black">
         {pratinjau ? (
+          // ponytail: pratinjau lokal base64, next/image tak bisa optimasi data-URL.
+          // Ganti ke <Image> kalau foto pindah ke URL server/CDN.
+          /* eslint-disable-next-line @next/next/no-img-element */
           <img src={pratinjau} alt="Pratinjau foto absensi" className="size-full object-cover" />
         ) : (
           <>
